@@ -1,0 +1,110 @@
+# =============================================================================
+# Flood Risk Mapping — Central Configuration
+# =============================================================================
+
+project:
+  name: "Flood Risk Mapping"
+  version: "1.0.0"
+  seed: 42
+
+# ---------------------------------------------------------------------------
+# Dataset
+# ---------------------------------------------------------------------------
+data:
+  raw_dir: "data/raw"
+  processed_dir: "data/processed"
+  samples_dir: "data/samples"
+  image_size: 224
+  num_classes: 5
+  class_names:
+    - "Non-Flooded"
+    - "Low Risk"
+    - "Medium Risk"
+    - "High Risk"
+    - "Flooded"
+  class_colors:        # RGB for visualization overlays
+    - [0, 200, 0]      # Green — Non-Flooded
+    - [255, 255, 0]    # Yellow — Low Risk
+    - [255, 165, 0]    # Orange — Medium Risk
+    - [255, 69, 0]     # Red-Orange — High Risk
+    - [139, 0, 0]      # Dark Red — Flooded
+  train_ratio: 0.70
+  val_ratio: 0.15
+  test_ratio: 0.15
+
+# ---------------------------------------------------------------------------
+# Data Augmentation
+# ---------------------------------------------------------------------------
+augmentation:
+  horizontal_flip: true
+  vertical_flip: true
+  rotation_limit: 30
+  brightness_contrast: true
+  gaussian_noise: true
+  elastic_transform: false
+  normalize_mean: [0.485, 0.456, 0.406]   # ImageNet stats
+  normalize_std: [0.229, 0.224, 0.225]
+
+# ---------------------------------------------------------------------------
+# Models
+# ---------------------------------------------------------------------------
+models:
+  vit:
+    name: "vit_base_patch16_224"
+    pretrained: true
+    finetune_layers: 4          # Number of transformer blocks to unfreeze
+    dropout: 0.1
+    attention_dropout: 0.0
+  cnn:
+    name: "efficientnet_b3"
+    pretrained: true
+    finetune_stages: 2          # Number of EfficientNet stages to unfreeze
+    dropout: 0.3
+
+# ---------------------------------------------------------------------------
+# Training
+# ---------------------------------------------------------------------------
+training:
+  epochs: 30
+  batch_size: 16
+  num_workers: 4
+  optimizer: "adamw"
+  learning_rate: 1.0e-4
+  weight_decay: 0.01
+  scheduler: "cosine"
+  warmup_epochs: 5
+  min_lr: 1.0e-6
+  gradient_clip: 1.0
+  early_stopping_patience: 8
+  save_best_only: true
+  mixed_precision: true         # Use fp16 if GPU available
+
+# ---------------------------------------------------------------------------
+# Prediction & Risk Thresholds
+# ---------------------------------------------------------------------------
+prediction:
+  alert_threshold: 0.75         # Probability above this triggers alert
+  heatmap_alpha: 0.4            # Overlay transparency
+  risk_thresholds:
+    low: 0.20
+    medium: 0.45
+    high: 0.70
+    flooded: 0.90
+
+# ---------------------------------------------------------------------------
+# Output Paths
+# ---------------------------------------------------------------------------
+output:
+  models_dir: "outputs/models"
+  plots_dir: "outputs/plots"
+  predictions_dir: "outputs/predictions"
+  vit_checkpoint: "outputs/models/vit_best.pth"
+  cnn_checkpoint: "outputs/models/cnn_best.pth"
+
+# ---------------------------------------------------------------------------
+# Dashboard
+# ---------------------------------------------------------------------------
+dashboard:
+  port: 8501
+  title: "🛰️ Flood Risk Mapping Dashboard"
+  max_upload_size_mb: 50
