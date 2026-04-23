@@ -143,7 +143,7 @@ def main():
     # Final evaluation on test set
     print("\nRunning final test evaluation...")
 
-    #trainer.load_best_checkpoint()
+    trainer.load_best_checkpoint()
 
     from src.utils.evaluator import evaluate_model, print_evaluation_report
     from src.visualization.risk_map import plot_confusion_matrix

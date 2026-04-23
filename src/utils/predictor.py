@@ -81,7 +81,7 @@ class FloodPredictor:
     # ------------------------------------------------------------------
     # Single image prediction
     # ------------------------------------------------------------------
-    def predict(self, image_input) -> PredictionResult:
+    def predict(self, image_input, filename: str = None) -> PredictionResult:
         """
         Predict flood risk for a single image.
 
@@ -92,7 +92,8 @@ class FloodPredictor:
         Returns:
             PredictionResult with full details.
         """
-        tensor, image_path = self._prepare_input(image_input)
+        tensor, original_path = self._prepare_input(image_input)
+        image_path = filename if filename else str(original_path)
         tensor = tensor.to(self.device)
 
         with torch.no_grad():
@@ -194,16 +195,25 @@ class FloodPredictor:
 
     def _classify_risk(self, probs: np.ndarray) -> str:
         """Map probability vector to human-readable risk level."""
-        risk_score = sum(i * p for i, p in enumerate(probs)) / (len(probs) - 1)
+        pred_idx = int(np.argmax(probs))
+        confidence = float(probs[pred_idx])
 
-        if risk_score < RISK_THRESHOLDS["low"]:
+        # Use predicted class directly for risk mapping
+        # Class order: 0=Non-Flooded, 1=Low Risk, 2=Medium Risk, 3=High Risk, 4=Flooded
+        if pred_idx <= 1:
             return "🟢 Low Risk"
-        elif risk_score < RISK_THRESHOLDS["medium"]:
+        elif pred_idx == 2:
+            if confidence > 0.5:
+                return "🟡 Moderate Risk"
+            return "🟢 Low Risk"
+        elif pred_idx == 3:
+            if confidence > 0.5:
+                return "🟠 High Risk"
             return "🟡 Moderate Risk"
-        elif risk_score < RISK_THRESHOLDS["high"]:
+        else:  # Flooded
+            if confidence > 0.5:
+                return "🔴 Critical Risk"
             return "🟠 High Risk"
-        else:
-            return "🔴 Critical Risk"
 
     def _check_alert(self, probs: np.ndarray) -> bool:
         """Trigger alert if probability of high-risk or flooded exceeds threshold."""

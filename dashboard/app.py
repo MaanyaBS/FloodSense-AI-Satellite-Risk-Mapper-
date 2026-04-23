@@ -59,9 +59,26 @@ st.markdown("""
 
 html, body, [class*="css"], .stApp {
     font-family: 'Inter', sans-serif !important;
-    background-color: #0a0f1e !important;
 }
-.stApp { background: #0a0f1e !important; }
+
+.stApp { 
+    background: radial-gradient(circle at top right, #0f2952 0%, #060d1f 50%, #0a0f1e 100%),
+                radial-gradient(circle at bottom left, #1a0a2e 0%, #060d1f 50%, #0a0f1e 100%) !important;
+    background-size: cover !important;
+    background-attachment: fixed !important;
+}
+
+.stApp::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background-image: 
+        linear-gradient(rgba(56,189,248,0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(56,189,248,0.035) 1px, transparent 1px);
+    background-size: 32px 32px;
+    z-index: -1;
+    pointer-events: none;
+}
 
 #MainMenu, footer, header { visibility: hidden; }
 .block-container {
@@ -119,10 +136,12 @@ html, body, [class*="css"], .stApp {
     background: rgba(56,189,248,0.04) !important;
     border: 2px dashed rgba(56,189,248,0.3) !important;
     border-radius: 16px !important;
+    transition: all 0.3s ease;
 }
 [data-testid="stFileUploader"]:hover {
     border-color: rgba(56,189,248,0.6) !important;
     background: rgba(56,189,248,0.08) !important;
+    transform: scale(1.02);
 }
 
 .stTabs [data-baseweb="tab-list"] {
@@ -745,56 +764,113 @@ with tab_predict:
 
     with col_left:
         section_label("📡 Satellite Image Input")
-        uploaded_file = st.file_uploader(
-            "Drop a satellite image here or click to browse",
-            type=["jpg", "jpeg", "png", "tif", "tiff"],
-            help="JPEG · PNG · GeoTIFF · Max 200MB"
-        )
+        
+        input_method = st.radio("Choose Input Method", ["Upload Image(s)", "Sample Gallery"], horizontal=True, label_visibility="collapsed")
+        
+        uploaded_files = []
+        
+        # A lightweight mock to behave exactly like Streamlit's UploadedFile
+        class MockUploadedFile(io.BytesIO):
+            def __init__(self, data, name, file_type):
+                super().__init__(data)
+                self.name = name
+                self.type = file_type
+                self.size = len(data)
+
+        if input_method == "Upload Image(s)":
+            uploaded_files = st.file_uploader(
+                "Drop satellite image(s) here or click to browse",
+                type=["jpg", "jpeg", "png", "tif", "tiff"],
+                help="JPEG · PNG · GeoTIFF · Max 200MB",
+                accept_multiple_files=True
+            )
+        else:
+            sample_dir = ROOT / "data" / "raw"
+            sample_images = list(sample_dir.glob("*/*.jpg"))
+            if not sample_images:
+                st.warning("No samples found. Please generate them first using src/utils/generate_demo_data.py.")
+            else:
+                sample_map = {f"{p.parent.name} — {p.name}": p for p in sample_images}
+                st.markdown("<div style='margin-bottom: 10px; font-size: 0.85rem; color: #94a3b8;'>Select from the generated sample gallery:</div>", unsafe_allow_html=True)
+                selected_keys = st.multiselect("Gallery", list(sample_map.keys()), max_selections=5, label_visibility="collapsed")
+                
+                for k in selected_keys:
+                    with open(sample_map[k], "rb") as f:
+                        data = f.read()
+                        f_type = "image/jpeg" if sample_map[k].suffix.lower() in [".jpg", ".jpeg"] else f"image/{sample_map[k].suffix.lower().lstrip('.')}"
+                        buf = MockUploadedFile(data, sample_map[k].name, f_type)
+                        uploaded_files.append(buf)
+
+        if "img_idx" not in st.session_state:
+            st.session_state.img_idx = 0
+            
+        uploaded_file = None
+        if uploaded_files:
+            st.session_state.img_idx = min(st.session_state.img_idx, len(uploaded_files) - 1)
+            current_idx = st.session_state.img_idx
+            uploaded_file = uploaded_files[current_idx]
+            
+            if len(uploaded_files) > 1:
+                btn_cols = st.columns([1, 2, 1])
+                if btn_cols[0].button("◀ Prev") and current_idx > 0:
+                    st.session_state.img_idx -= 1
+                    st.rerun()
+                btn_cols[1].markdown(f"<div style='text-align:center; padding-top:8px; font-size:0.85rem; font-weight:600; color:#38bdf8; letter-spacing:0.05em;'>Viewing {current_idx+1} of {len(uploaded_files)}</div>", unsafe_allow_html=True)
+                if btn_cols[2].button("Next ▶") and current_idx < len(uploaded_files) - 1:
+                    st.session_state.img_idx += 1
+                    st.rerun()
 
         if uploaded_file:
-            pil_img = Image.open(uploaded_file).convert("RGB")
-            section_label("🖼️ Preview", "#818cf8")
-            st.image(pil_img.resize((440, 440)), caption="", use_container_width=True)
-
-            w, h = pil_img.size
-            st.markdown(f"""
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;">
-                <div style="background:rgba(56,189,248,0.06);border:1px solid rgba(56,189,248,0.15);
-                            border-radius:10px;padding:10px 14px;">
-                    <div style="font-size:0.62rem;color:#475569;font-weight:600;
-                                text-transform:uppercase;letter-spacing:0.08em;">Width</div>
-                    <div style="font-size:1.1rem;color:#f0f9ff;font-weight:700;
-                                font-family:'JetBrains Mono',monospace;">{w}px</div>
-                </div>
-                <div style="background:rgba(56,189,248,0.06);border:1px solid rgba(56,189,248,0.15);
-                            border-radius:10px;padding:10px 14px;">
-                    <div style="font-size:0.62rem;color:#475569;font-weight:600;
-                                text-transform:uppercase;letter-spacing:0.08em;">Height</div>
-                    <div style="font-size:1.1rem;color:#f0f9ff;font-weight:700;
-                                font-family:'JetBrains Mono',monospace;">{h}px</div>
-                </div>
-                <div style="background:rgba(56,189,248,0.06);border:1px solid rgba(56,189,248,0.15);
-                            border-radius:10px;padding:10px 14px;">
-                    <div style="font-size:0.62rem;color:#475569;font-weight:600;
-                                text-transform:uppercase;letter-spacing:0.08em;">Format</div>
-                    <div style="font-size:1.1rem;color:#f0f9ff;font-weight:700;">
-                        {uploaded_file.type.split("/")[-1].upper()}
+            uploaded_file.seek(0)
+            try:
+                pil_img = Image.open(uploaded_file).convert("RGB")
+                section_label("🖼️ Preview", "#818cf8")
+                st.image(pil_img.resize((440, 440)), caption=uploaded_file.name, use_container_width=True)
+                
+                if pil_img:
+                    w, h = pil_img.size
+                    st.markdown(f"""
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;">
+                        <div style="background:rgba(56,189,248,0.06);border:1px solid rgba(56,189,248,0.15);
+                                    border-radius:10px;padding:10px 14px;">
+                            <div style="font-size:0.62rem;color:#475569;font-weight:600;
+                                        text-transform:uppercase;letter-spacing:0.08em;">Width</div>
+                            <div style="font-size:1.1rem;color:#f0f9ff;font-weight:700;
+                                        font-family:'JetBrains Mono',monospace;">{w}px</div>
+                        </div>
+                        <div style="background:rgba(56,189,248,0.06);border:1px solid rgba(56,189,248,0.15);
+                                    border-radius:10px;padding:10px 14px;">
+                            <div style="font-size:0.62rem;color:#475569;font-weight:600;
+                                        text-transform:uppercase;letter-spacing:0.08em;">Height</div>
+                            <div style="font-size:1.1rem;color:#f0f9ff;font-weight:700;
+                                        font-family:'JetBrains Mono',monospace;">{h}px</div>
+                        </div>
+                        <div style="background:rgba(56,189,248,0.06);border:1px solid rgba(56,189,248,0.15);
+                                    border-radius:10px;padding:10px 14px;">
+                            <div style="font-size:0.62rem;color:#475569;font-weight:600;
+                                        text-transform:uppercase;letter-spacing:0.08em;">Format</div>
+                            <div style="font-size:1.1rem;color:#f0f9ff;font-weight:700;">
+                                {uploaded_file.type.split("/")[-1].upper()}
+                            </div>
+                        </div>
+                        <div style="background:rgba(56,189,248,0.06);border:1px solid rgba(56,189,248,0.15);
+                                    border-radius:10px;padding:10px 14px;">
+                            <div style="font-size:0.62rem;color:#475569;font-weight:600;
+                                        text-transform:uppercase;letter-spacing:0.08em;">Size</div>
+                            <div style="font-size:1.1rem;color:#f0f9ff;font-weight:700;
+                                        font-family:'JetBrains Mono',monospace;">
+                                {uploaded_file.size/1024:.1f} KB
+                            </div>
+                        </div>
                     </div>
-                </div>
-                <div style="background:rgba(56,189,248,0.06);border:1px solid rgba(56,189,248,0.15);
-                            border-radius:10px;padding:10px 14px;">
-                    <div style="font-size:0.62rem;color:#475569;font-weight:600;
-                                text-transform:uppercase;letter-spacing:0.08em;">Size</div>
-                    <div style="font-size:1.1rem;color:#f0f9ff;font-weight:700;
-                                font-family:'JetBrains Mono',monospace;">
-                        {uploaded_file.size/1024:.1f} KB
-                    </div>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
+                    """, unsafe_allow_html=True)
+            except Exception as e:
+                st.error(f"Error loading image preview: {e}")
+                pil_img = None
+                
 
     with col_right:
-        if uploaded_file is None:
+        if uploaded_file is None or not locals().get('pil_img'):
             st.markdown("""
             <div style="height:500px;display:flex;align-items:center;justify-content:center;
                         flex-direction:column;gap:18px;
@@ -832,11 +908,11 @@ with tab_predict:
                 if "ViT" in model_choice or "Both" in model_choice:
                     m = load_model("vit", device_str)
                     vit_result = FloodPredictor(m, "vit",
-                                               torch.device(device_str)).predict(pil_img_224)
+                                               torch.device(device_str)).predict(pil_img_224, filename=uploaded_file.name)
                 if "CNN" in model_choice or "Both" in model_choice:
                     m = load_model("cnn", device_str)
                     cnn_result = FloodPredictor(m, "cnn",
-                                               torch.device(device_str)).predict(pil_img_224)
+                                               torch.device(device_str)).predict(pil_img_224, filename=uploaded_file.name)
 
             primary = vit_result if vit_result else cnn_result
             cls     = primary.predicted_class

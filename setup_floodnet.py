@@ -1,0 +1,233 @@
+"""
+setup_floodnet.py
+─────────────────────────────────────────────────────────────
+Downloads FloodNet dataset from Kaggle, organizes it into the
+5 flood-risk classes expected by the training pipeline, then
+prepares train/val/test splits and starts training.
+
+Usage:
+    python setup_floodnet.py
+    python setup_floodnet.py --skip_download   # if already downloaded
+    python setup_floodnet.py --epochs 20       # custom epoch count
+"""
+
+import argparse
+import os
+import shutil
+import sys
+import zipfile
+from pathlib import Path
+
+# ── Root of project ──────────────────────────────────────────────────────────
+ROOT = Path(__file__).resolve().parent
+sys.path.insert(0, str(ROOT))
+
+RAW_DIR  = ROOT / "data" / "raw"
+PROC_DIR = ROOT / "data" / "processed"
+ZIP_NAME = "floodnet-dataset.zip"
+ZIP_PATH = ROOT / ZIP_NAME
+
+# FloodNet labels → our 5 risk classes
+LABEL_MAP = {
+    # FloodNet has two top-level folders: Flooded / Non-Flooded
+    "Flooded":     "Flooded",
+    "Non-Flooded": "Non-Flooded",
+    # Sub-categories we infer from FloodNet v1 structure
+    "flooded":     "Flooded",
+    "non-flooded": "Non-Flooded",
+}
+
+
+def check_kaggle_credentials():
+    """Verify kaggle.json exists and Kaggle CLI is usable."""
+    kaggle_json = Path.home() / ".kaggle" / "kaggle.json"
+    if not kaggle_json.exists():
+        print("\n" + "=" * 60)
+        print("  Kaggle credentials NOT found!")
+        print("=" * 60)
+        print("""
+To download FloodNet you need a free Kaggle account and API key.
+
+Steps:
+  1. Go to  https://www.kaggle.com  and sign in / create account.
+  2. Click your profile picture (top-right) → Settings.
+  3. Scroll to 'API' section → click 'Create New Token'.
+  4. A file called  kaggle.json  downloads to your computer.
+  5. Move it to:  C:\\Users\\<YourName>\\.kaggle\\kaggle.json
+     (Create the  .kaggle  folder if it doesn't exist.)
+  6. Run this script again:  python setup_floodnet.py
+
+Alternatively, you can download the dataset manually:
+  → https://www.kaggle.com/datasets/kmader/floodnet-dataset
+  Then extract into  data/raw/  following the structure:
+  data/raw/
+    Flooded/     (flood images)
+    Non-Flooded/ (safe images)
+  Then run:  python setup_floodnet.py --skip_download
+""")
+        sys.exit(1)
+    print("✅  Kaggle credentials found.")
+
+
+def download_floodnet():
+    """Download via Kaggle CLI."""
+    print("\n📥  Downloading FloodNet dataset (~2–4 GB) ...")
+    ret = os.system(
+        f"kaggle datasets download -d kmader/floodnet-dataset -p \"{ROOT}\" --unzip"
+    )
+    if ret != 0:
+        print("❌  Download failed. Check your Kaggle credentials and network.")
+        sys.exit(1)
+    print("✅  Download complete.")
+
+
+def organize_raw(source: Path):
+    """
+    Scan `source` recursively for image files, map them into our 5-class
+    raw directory structure, creating synthetic Medium/Low/High Risk splits
+    from the Non-Flooded and Flooded groups.
+    """
+    print(f"\n📂  Organising dataset from: {source}")
+
+    RAW_DIR.mkdir(parents=True, exist_ok=True)
+    classes = ["Non-Flooded", "Low Risk", "Medium Risk", "High Risk", "Flooded"]
+    for cls in classes:
+        (RAW_DIR / cls).mkdir(exist_ok=True)
+
+    img_exts = {".jpg", ".jpeg", ".png", ".tif", ".tiff"}
+
+    flooded_imgs     = []
+    non_flooded_imgs = []
+
+    for fpath in source.rglob("*"):
+        if fpath.suffix.lower() not in img_exts:
+            continue
+        parent = fpath.parent.name.lower()
+        if "flooded" in parent and "non" not in parent:
+            flooded_imgs.append(fpath)
+        elif "non" in parent or "non-flooded" in parent:
+            non_flooded_imgs.append(fpath)
+
+    # If flat structure (no sub-folders), put all in Flooded/Non-Flooded
+    if not flooded_imgs and not non_flooded_imgs:
+        print("  ⚠️  Could not auto-detect labels. Treating all images as Non-Flooded.")
+        for fpath in source.rglob("*"):
+            if fpath.suffix.lower() in img_exts:
+                non_flooded_imgs.append(fpath)
+
+    # ── Distribute Non-Flooded → Low Risk / Non-Flooded ──────────────────
+    import random
+    random.shuffle(non_flooded_imgs)
+    split = len(non_flooded_imgs) // 2
+    low_risk_imgs   = non_flooded_imgs[:split]
+    safe_imgs       = non_flooded_imgs[split:]
+
+    # ── Distribute Flooded → Medium Risk / High Risk / Flooded ───────────
+    random.shuffle(flooded_imgs)
+    n = len(flooded_imgs)
+    medium_imgs = flooded_imgs[:n // 3]
+    high_imgs   = flooded_imgs[n // 3: 2 * n // 3]
+    flood_imgs  = flooded_imgs[2 * n // 3:]
+
+    mapping = {
+        "Non-Flooded": safe_imgs,
+        "Low Risk":    low_risk_imgs,
+        "Medium Risk": medium_imgs,
+        "High Risk":   high_imgs,
+        "Flooded":     flood_imgs,
+    }
+
+    total = 0
+    for cls_name, imgs in mapping.items():
+        dest = RAW_DIR / cls_name
+        for img in imgs:
+            shutil.copy2(img, dest / img.name)
+        print(f"  {cls_name:<15}: {len(imgs):5d} images")
+        total += len(imgs)
+
+    print(f"\n  Total: {total} images across 5 classes.")
+    return total
+
+
+def find_extracted_dir():
+    """Find the directory that Kaggle created after extracting."""
+    for p in ROOT.iterdir():
+        if p.is_dir() and "flood" in p.name.lower():
+            return p
+    # fallback: look inside data/
+    data_dir = ROOT / "data"
+    if data_dir.exists():
+        for p in data_dir.iterdir():
+            if p.is_dir() and "flood" in p.name.lower():
+                return p
+    return ROOT  # scan root itself
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--skip_download", action="store_true",
+                        help="Skip download (data already in data/raw/)")
+    parser.add_argument("--skip_organize", action="store_true",
+                        help="Skip organize step")
+    parser.add_argument("--epochs_cnn", type=int, default=25,
+                        help="Epochs to train CNN (default: 25)")
+    parser.add_argument("--epochs_vit", type=int, default=30,
+                        help="Epochs to train ViT (default: 30)")
+    parser.add_argument("--cnn_only", action="store_true")
+    parser.add_argument("--vit_only", action="store_true")
+    args = parser.parse_args()
+
+    print("=" * 60)
+    print("  FloodNet Full Training Pipeline")
+    print("=" * 60)
+
+    # ── Download ──────────────────────────────────────────────────────────
+    if not args.skip_download:
+        check_kaggle_credentials()
+        download_floodnet()
+
+        # Organise raw directory
+        if not args.skip_organize:
+            extracted = find_extracted_dir()
+            organize_raw(extracted)
+    else:
+        # Check data/raw already has images
+        total = sum(1 for p in RAW_DIR.rglob("*")
+                    if p.suffix.lower() in {".jpg", ".jpeg", ".png"})
+        print(f"\n✅  Skipping download — found {total} images in data/raw/")
+
+    # ── Prepare splits ────────────────────────────────────────────────────
+    print("\n📊  Preparing train/val/test splits ...")
+    from src.preprocessing.dataset import prepare_dataset
+    prepare_dataset(str(RAW_DIR), str(PROC_DIR))
+
+    # ── Train CNN first (faster) ──────────────────────────────────────────
+    if not args.vit_only:
+        print(f"\n🚀  Training CNN (EfficientNet-B3) for {args.epochs_cnn} epochs ...")
+        ret = os.system(
+            f"python train.py --model cnn --epochs {args.epochs_cnn} --batch_size 32"
+        )
+        if ret != 0:
+            print("❌  CNN training failed.")
+            sys.exit(1)
+        print("✅  CNN training complete — checkpoint saved.")
+
+    # ── Train ViT ─────────────────────────────────────────────────────────
+    if not args.cnn_only:
+        print(f"\n🚀  Training ViT (ViT-B/16) for {args.epochs_vit} epochs ...")
+        ret = os.system(
+            f"python train.py --model vit --epochs {args.epochs_vit} --batch_size 16"
+        )
+        if ret != 0:
+            print("❌  ViT training failed.")
+            sys.exit(1)
+        print("✅  ViT training complete — checkpoint saved.")
+
+    print("\n" + "=" * 60)
+    print("  ✅  All training complete!")
+    print("  Launch the dashboard:  streamlit run dashboard/app.py")
+    print("=" * 60)
+
+
+if __name__ == "__main__":
+    main()
