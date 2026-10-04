@@ -18,7 +18,7 @@ import torch
 
 from src.models.model_factory import get_model
 from src.preprocessing.dataset import get_dataloaders, prepare_dataset
-from src.utils.config_loader import load_config
+from src.utils.config_loader import load_config, set_seed
 from src.utils.trainer import Trainer
 from src.visualization.risk_map import plot_training_history
 
@@ -65,11 +65,24 @@ def parse_args():
         "--device", type=str, default=None,
         help="Device: cuda / cpu (auto-detected if not specified)"
     )
+    parser.add_argument(
+        "--seed", type=int, default=None,
+        help="Random seed (default: project.seed from config.yaml)"
+    )
+    parser.add_argument(
+        "--num_workers", type=int, default=None,
+        help="Dataloader workers (default: training.num_workers from config)"
+    )
     return parser.parse_args()
 
 
 def main():
     args = parse_args()
+
+    # Seed before anything touches an RNG, so model init and split order
+    # are reproducible and the ViT-vs-CNN comparison stays controlled.
+    seed = set_seed(args.seed)
+    print(f"\n  Seed: {seed}")
 
     # Device setup
     if args.device:
@@ -99,6 +112,7 @@ def main():
     loaders = get_dataloaders(
         processed_dir=args.data_dir,
         batch_size=args.batch_size,
+        num_workers=args.num_workers,
     )
 
     # Model

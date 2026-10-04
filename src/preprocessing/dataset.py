@@ -53,13 +53,74 @@ class FloodDataset(Dataset):
 
     def _load_samples(self):
         valid_exts = {".jpg", ".jpeg", ".png", ".tif", ".tiff"}
+
+        if not self.root.exists():
+            raise FileNotFoundError(
+                f"Split directory not found: {self.root}\n"
+                f"Run 'python src/utils/generate_demo_data.py' or "
+                f"'prepare_dataset()' before building dataloaders."
+            )
+
+        missing, empty = [], []
+
         for class_name, idx in self.class_to_idx.items():
             class_dir = self.root / class_name
+
             if not class_dir.exists():
+                missing.append(class_name)
                 continue
-            for fpath in class_dir.iterdir():
+
+            found = 0
+            for fpath in sorted(class_dir.iterdir()):
                 if fpath.suffix.lower() in valid_exts:
                     self.samples.append((fpath, idx))
+                    found += 1
+
+            if found == 0:
+                empty.append(class_name)
+
+        # A missing class directory used to be skipped silently, which let a
+        # binary Flooded/Non-Flooded layout train as a 1-class dataset and report
+        # meaningless accuracy. Class names are also case/spacing sensitive
+        # ("Non-Flooded" vs "non_flooded"), so show what was expected.
+        problems = []
+        if missing:
+            problems.append(
+                f"  missing directories : {', '.join(missing)}\n"
+                f"    (expected under {self.root})"
+            )
+        if empty:
+            problems.append(
+                f"  empty directories   : {', '.join(empty)}\n"
+                f"    (found no .jpg/.jpeg/.png/.tif/.tiff files)"
+            )
+
+        if problems:
+            raise ValueError(
+                f"Dataset split '{self.root.name}' is incomplete "
+                f"({len(self.samples)} images loaded):\n"
+                + "\n".join(problems)
+                + f"\n\nConfigured classes ({len(self.class_to_idx)}): "
+                + ", ".join(self.class_to_idx.keys())
+                + "\nDirectory names must match these exactly. FloodNet ships a "
+                "binary layout (Flooded/Non-Flooded) — map those folders onto the "
+                "five risk tiers before training, or set "
+                "data.class_names/data.num_classes in config.yaml."
+            )
+
+        if not self.samples:
+            raise ValueError(
+                f"No images found under {self.root}. "
+                f"Expected: {', '.join(self.class_to_idx.keys())}"
+            )
+
+        labels = {idx for _, idx in self.samples}
+        if len(labels) < 2:
+            raise ValueError(
+                f"Only {len(labels)} distinct class present in {self.root}. "
+                f"A single-class dataset cannot train a classifier - each split "
+                f"needs at least 2 classes to compute a meaningful loss."
+            )
 
         random.shuffle(self.samples)
 
@@ -149,8 +210,11 @@ def get_dataloaders(
 
     bs = batch_size or cfg["training"]["batch_size"]
 
-    # FORCE SAFE SETTINGS FOR WINDOWS
-    nw = 0
+    # Honour the caller's num_workers, defaulting to config. multiprocessing
+    # dataloaders require an if __name__ == "__main__" guard, which every entry
+    # point here already has; set to 0 to serialise.
+    nw = cfg["training"]["num_workers"] if num_workers is None else num_workers
+    nw = max(0, int(nw))
 
     proc = Path(processed_dir)
 

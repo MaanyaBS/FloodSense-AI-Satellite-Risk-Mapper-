@@ -39,3 +39,51 @@ def load_config(config_path: str = None) -> Dict[str, Any]:
         config = yaml.safe_load(f)
 
     return config
+
+
+def set_seed(seed: int = None, deterministic: bool = True) -> int:
+    """
+    Seed every RNG that affects a training run.
+
+    config.yaml declares project.seed but nothing previously read it, so runs
+    were not reproducible. Call this before building models and dataloaders:
+
+        from src.utils.config_loader import load_config, set_seed
+        cfg = load_config()
+        set_seed(cfg["project"]["seed"])
+
+    Args:
+        seed: Seed value. Defaults to project.seed from config.
+        deterministic: Force cuDNN into deterministic mode (slower, but
+            bit-identical across runs on the same hardware).
+
+    Returns:
+        The seed that was applied.
+    """
+    import random
+
+    import numpy as np
+
+    if seed is None:
+        seed = load_config()["project"].get("seed", 42)
+
+    seed = int(seed)
+
+    os.environ["PYTHONHASHSEED"] = str(seed)
+    random.seed(seed)
+    np.random.seed(seed)
+
+    try:
+        import torch
+
+        torch.manual_seed(seed)
+        torch.cuda.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
+
+        if deterministic:
+            torch.backends.cudnn.deterministic = True
+            torch.backends.cudnn.benchmark = False
+    except ImportError:
+        pass
+
+    return seed

@@ -15,7 +15,7 @@ import torch
 
 from src.models.model_factory import get_model
 from src.preprocessing.dataset import get_dataloaders
-from src.utils.config_loader import load_config
+from src.utils.config_loader import load_config, set_seed
 from src.utils.evaluator import (
     compare_models,
     evaluate_model,
@@ -41,6 +41,10 @@ def parse_args():
         "--data_dir", type=str, default=cfg["data"]["processed_dir"]
     )
     parser.add_argument("--device", type=str, default=None)
+    parser.add_argument(
+        "--seed", type=int, default=None,
+        help="Random seed (default: project.seed from config.yaml)"
+    )
     return parser.parse_args()
 
 
@@ -60,6 +64,11 @@ def load_trained_model(model_type: str, device: torch.device):
 
 def main():
     args = parse_args()
+
+    # Same seed as training, so the weighted sampler and any augmentation
+    # randomness replay identically and the comparison is apples-to-apples.
+    set_seed(args.seed)
+
     device = torch.device(
         args.device or ("cuda" if torch.cuda.is_available() else "cpu")
     )

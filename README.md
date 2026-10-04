@@ -96,15 +96,46 @@ Traditional CNNs process images locally via convolutional kernels. Vision Transf
 # Or via Kaggle:
 pip install kaggle
 kaggle datasets download -d kmader/floodnet-dataset
+```
 
-# After download, organize as:
+> ⚠️ **FloodNet ships binary labels (`Flooded` / `Non-Flooded`), but this project
+> is configured for five risk tiers** (`config.yaml` → `data.num_classes: 5`).
+> Folder names must match `data.class_names` **exactly**, including case and
+> hyphenation. `FloodDataset` now raises a descriptive error listing the
+> directories it expected if any class folder is missing or empty, rather than
+> silently training on whatever it found.
+
+To train on FloodNet, first map its binary folders onto the five tiers:
+
+```bash
+python setup_floodnet.py --num-classes 5
+```
+
+Or edit `config.yaml` to match the classes you actually have — for a genuine
+binary run:
+
+```yaml
+data:
+  num_classes: 2
+  class_names:
+    - "Non-Flooded"
+    - "Flooded"
+  class_colors:
+    - [0, 200, 0]
+    - [139, 0, 0]
+```
+
+Resulting layout (created by `prepare_dataset`, or by hand):
+
+```
 data/raw/
-  train/
-    Flooded/
-    Non-Flooded/
-  test/
-    Flooded/
-    Non-Flooded/
+  Flooded/
+  Non-Flooded/
+  Low Risk/
+  Medium Risk/
+  High Risk/
+data/processed/
+  train/ val/ test/     # one subdir per class
 ```
 
 ### Option 2: SEN12-FLOOD Dataset
