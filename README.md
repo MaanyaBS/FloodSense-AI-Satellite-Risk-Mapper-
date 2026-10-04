@@ -6,16 +6,49 @@ A complete machine learning system for detecting and mapping flood-prone areas f
 
 ## 📌 Table of Contents
 
-1. [Project Overview](#project-overview)
-2. [System Architecture](#system-architecture)
-3. [Dataset Setup](#dataset-setup)
-4. [Installation](#installation)
-5. [Project Structure](#project-structure)
-6. [Usage Guide](#usage-guide)
-7. [Model Details](#model-details)
-8. [Results & Evaluation](#results--evaluation)
-9. [Dashboard](#dashboard)
-10. [Extra Features](#extra-features)
+1. [Aim and Objectives](#aim-and-objectives)
+2. [Project Overview](#project-overview)
+3. [System Architecture](#system-architecture)
+4. [Dataset Setup](#dataset-setup)
+5. [Installation](#installation)
+6. [Project Structure](#project-structure)
+7. [Usage Guide](#usage-guide)
+8. [Model Details](#model-details)
+9. [Results & Evaluation](#results--evaluation)
+10. [Dashboard](#dashboard)
+11. [Extra Features](#extra-features)
+
+---
+
+## Aim and Objectives
+
+**Full version with rationale, research questions, scope and deliverables: [`docs/objectives.md`](docs/objectives.md)**
+
+### Aim
+
+To develop a deep-learning–based system, **FloodSense**, that identifies and maps flood-prone regions in multispectral satellite imagery using Vision Transformers, and to make its predictions interpretable and accessible through an interactive web dashboard.
+
+### Objectives
+
+| # | Objective |
+|---|-----------|
+| **O1** | To curate and prepare a suitable dataset of flood and non-flood imagery (FloodNet / SEN12-FLOOD), applying resizing, normalisation and class balancing so all five risk tiers are adequately represented. |
+| **O2** | To implement a reproducible preprocessing and augmentation pipeline supporting deterministic train/val/test splitting and geometric and photometric augmentation. |
+| **O3** | To implement a **Vision Transformer (ViT-B/16)** classifier using self-attention over 16×16 patches, fine-tuning the final four transformer blocks from ImageNet-21k pretrained weights. |
+| **O4** | To implement an **EfficientNet-B3 CNN baseline** to serve as a comparative benchmark for testing whether self-attention offers measurable advantage. |
+| **O5** | To formulate the task across **five graded risk tiers** — Non-Flooded, Low Risk, Medium Risk, High Risk, Flooded — with calibrated thresholds, so output expresses flood *susceptibility* rather than a binary label. |
+| **O6** | To train and tune both models under an **identical experimental protocol** (AdamW, 1e-4 LR, 0.01 WD, cosine annealing, 5 warm-up epochs, weighted CE loss) so only the architecture varies. |
+| **O7** | To evaluate both models **quantitatively** using accuracy, precision, recall, F1-score, IoU and confusion matrices, documenting failure modes rather than headline accuracy alone. |
+| **O8** | To make predictions **explainable** via Grad-CAM for the CNN and attention-rollout visualisation for the ViT. |
+| **O9** | To deliver an **interactive Streamlit dashboard** enabling image upload, graded classification, probability bars, heatmap overlays, a zoomable risk map, and threshold-based alerts. |
+| **O10** | To ensure **end-to-end reproducibility** via a synthetic demo-data generator and one-command quickstart, so the pipeline is demonstrable without large dataset downloads. |
+
+### Research Questions
+
+- **RQ1** — Does a ViT achieve superior flood-risk classification accuracy and F1-score versus a CNN baseline of comparable input resolution?
+- **RQ2** — Can attention-based and gradient-based explainability reveal physically meaningful hydrogeographic features (river channels, drainage basins, elevation gradients)?
+- **RQ3** — How does class imbalance between flood and non-flood regions affect reported metrics, and how best should it be mitigated?
+- **RQ4** — Does a trained model deliver useful graded risk output on imagery from a different source distribution (cross-dataset generalisation)?
 
 ---
 
