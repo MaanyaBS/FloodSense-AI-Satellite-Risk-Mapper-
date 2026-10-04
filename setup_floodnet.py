@@ -115,38 +115,145 @@ def organize_raw(source: Path):
             if fpath.suffix.lower() in img_exts:
                 non_flooded_imgs.append(fpath)
 
-    # ── Distribute Non-Flooded → Low Risk / Non-Flooded ──────────────────
-    import random
-    random.shuffle(non_flooded_imgs)
-    split = len(non_flooded_imgs) // 2
-    low_risk_imgs   = non_flooded_imgs[:split]
-    safe_imgs       = non_flooded_imgs[split:]
+    # ── Map onto the configured class set ───────────────────────────────────
+    #
+    # FloodNet provides only two ground-truth labels: Flooded / Non-Flooded.
+    # It carries NO risk-severity information, so the intermediate tiers
+    # (Low / Medium / High Risk) cannot be derived from it.
+    #
+    # This function previously shuffled each binary class and re-split it
+    # across the five tiers, which produced a model that learned to
+    # separate random noise rather than flood severity - every accuracy
+    # figure derived from it was meaningless.
+    #
+    # We now map each FloodNet image to exactly one class, using the
+    # class_names defined in config.yaml. If that config requests five
+    # tiers we abort with instructions rather than invent labels.
+    import yaml
 
-    # ── Distribute Flooded → Medium Risk / High Risk / Flooded ───────────
-    random.shuffle(flooded_imgs)
-    n = len(flooded_imgs)
-    medium_imgs = flooded_imgs[:n // 3]
-    high_imgs   = flooded_imgs[n // 3: 2 * n // 3]
-    flood_imgs  = flooded_imgs[2 * n // 3:]
+    with open(ROOT / "config.yaml", "r", encoding="utf-8") as f:
+        cfg = yaml.safe_load(f)
 
+    class_names = cfg["data"]["class_names"]
+
+    if len(class_names) != 2:
+        print(
+            "\n" + "=" * 60
+        )
+        print("  CANNOT BUILD 5-CLASS LABELS FROM FloodNet")
+        print("=" * 60)
+        print(
+            "\n  FloodNet is labelled binary (Flooded / Non-Flooded). It has no\n"
+            "  risk-severity ground truth, so 'Low Risk', 'Medium Risk' and\n"
+            "  'High Risk' cannot be derived from it without fabricating labels.\n\n"
+            "  Your config.yaml currently requests:\n"
+            f"    num_classes : {cfg['data']['num_classes']}\n"
+            f"    class_names : {', '.join(class_names)}\n\n"
+            "  Pick one:\n"
+            "   1. Honest binary run - edit config.yaml to:\n"
+            "        num_classes: 2\n"
+            "        class_names: ['Non-Flooded', 'Flooded']\n"
+            "        class_colors: [[0,200,0], [139,0,0]]\n"
+            "      Then re-run this script.\n\n"
+            "   2. Real 5-tier labels - use SEN12-FLOOD, or generate risk tiers\n"
+            "      from DEM/topographic data, then point class_names at those.\n\n"
+            "  Nothing was copied. Aborting."
+        )
+        return None
+
+    # Binary config: two classes, mapped 1:1 from FloodNet ground truth.
     mapping = {
-        "Non-Flooded": safe_imgs,
-        "Low Risk":    low_risk_imgs,
-        "Medium Risk": medium_imgs,
-        "High Risk":   high_imgs,
-        "Flooded":     flood_imgs,
+        class_names[0]: non_flooded_imgs,
+        class_names[1]: flooded_imgs,
     }
 
     total = 0
     for cls_name, imgs in mapping.items():
+        if not imgs:
+            continue
         dest = RAW_DIR / cls_name
         for img in imgs:
             shutil.copy2(img, dest / img.name)
         print(f"  {cls_name:<15}: {len(imgs):5d} images")
         total += len(imgs)
 
-    print(f"\n  Total: {total} images across 5 classes.")
+    print(f"\n  Total: {total} images across {len(mapping)} classes "
+          f"(1:1 from FloodNet ground truth, no synthetic tiers).")
     return total
+
+
+BINARY_BLOCK = '''  num_classes: 2
+  class_names:
+    - "Non-Flooded"
+    - "Flooded"
+  class_colors:        # RGB for visualization overlays
+    - [0, 200, 0]      # Green - Non-Flooded
+    - [139, 0, 0]      # Dark Red - Flooded
+'''
+
+
+def apply_binary_config():
+    """
+    Rewrite config.yaml to a 2-class setup for a ground-truth binary run.
+
+    FloodNet cannot supply risk-severity labels, so a binary run is the
+    only defensible way to train on it. This edits the real config in
+    place, preserving comments and key order, and backs up the original.
+    """
+    config_path = ROOT / "config.yaml"
+    backup_path = ROOT / "config.yaml.bak"
+
+    if not backup_path.exists():
+        shutil.copy2(config_path, backup_path)
+        print(f"\n[backup] original config saved to {backup_path.name}")
+
+    lines = config_path.read_text(encoding="utf-8").splitlines(keepends=True)
+
+    out, i = [], 0
+    while i < len(lines):
+        line = lines[i]
+
+        if line.strip() == "num_classes: 5":
+            out.append(BINARY_BLOCK)
+            i += 1
+            # Skip the old class_names list and class_colors block, up to train_ratio.
+            while i < len(lines) and not lines[i].lstrip().startswith("train_ratio:"):
+                i += 1
+            continue
+
+        # Alert thresholds keyed to the 5-tier scheme are meaningless for 2 classes.
+        if line.strip().startswith("risk_thresholds:"):
+            i += 1
+            while i < len(lines) and lines[i].startswith("    "):
+                i += 1
+            out.append("  risk_thresholds:\n")
+            out.append("    flooded: 0.50      # binary: p(flooded) at/above this is an alert\n")
+            continue
+
+        out.append(line)
+        i += 1
+
+    config_path.write_text("".join(out), encoding="utf-8")
+
+    # Validate the result actually loads and is self-consistent.
+    import yaml
+
+    with open(config_path, "r", encoding="utf-8") as f:
+        cfg = yaml.safe_load(f)
+
+    names = cfg["data"]["class_names"]
+    colors = cfg["data"]["class_colors"]
+
+    if cfg["data"]["num_classes"] != 2 or len(names) != 2 or len(colors) != 2:
+        print("\n[error] Failed to rewrite config.yaml to a valid 2-class setup.")
+        print(f"    num_classes={cfg['data']['num_classes']} "
+              f"class_names={len(names)} class_colors={len(colors)}")
+        print(f"    Restoring from {backup_path.name}")
+        shutil.copy2(backup_path, config_path)
+        return False
+
+    print(f"[ok] config.yaml set to 2 classes: {', '.join(names)}")
+    return True
 
 
 def find_extracted_dir():
@@ -175,6 +282,11 @@ def main():
                         help="Epochs to train ViT (default: 30)")
     parser.add_argument("--cnn_only", action="store_true")
     parser.add_argument("--vit_only", action="store_true")
+    parser.add_argument(
+        "--binary", action="store_true",
+        help="Allow binary FloodNet run; rewrites config.yaml to 2 classes "
+             "(Non-Flooded / Flooded) so labels stay ground-truth derived"
+    )
     args = parser.parse_args()
 
     print("=" * 60)
@@ -182,6 +294,9 @@ def main():
     print("=" * 60)
 
     # ── Download ──────────────────────────────────────────────────────────
+    if args.binary:
+        apply_binary_config()
+
     if not args.skip_download:
         check_kaggle_credentials()
         download_floodnet()
@@ -199,9 +314,17 @@ def main():
     # ── Prepare splits ────────────────────────────────────────────────────
     print("\n📊  Preparing train/val/test splits ...")
     from src.preprocessing.dataset import prepare_dataset
-    prepare_dataset(str(RAW_DIR), str(PROC_DIR))
+
+    try:
+        prepare_dataset(str(RAW_DIR), str(PROC_DIR))
+    except ValueError as e:
+        # Refuse to train on a split that does not match config.
+        print(f"\n❌  Dataset does not match config.yaml:\n\n{e}")
+        return 1
 
     # ── Train CNN first (faster) ──────────────────────────────────────────
+    ret_code = 0
+
     if not args.vit_only:
         print(f"\n🚀  Training CNN (EfficientNet-B3) for {args.epochs_cnn} epochs ...")
         ret = os.system(
@@ -227,6 +350,12 @@ def main():
     print("  ✅  All training complete!")
     print("  Launch the dashboard:  streamlit run dashboard/app.py")
     print("=" * 60)
+
+    return ret_code
+
+
+if __name__ == "__main__":
+    sys.exit(main() or 0)
 
 
 if __name__ == "__main__":

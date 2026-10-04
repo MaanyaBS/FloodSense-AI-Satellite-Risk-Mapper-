@@ -98,32 +98,36 @@ pip install kaggle
 kaggle datasets download -d kmader/floodnet-dataset
 ```
 
-> ⚠️ **FloodNet ships binary labels (`Flooded` / `Non-Flooded`), but this project
-> is configured for five risk tiers** (`config.yaml` → `data.num_classes: 5`).
-> Folder names must match `data.class_names` **exactly**, including case and
-> hyphenation. `FloodDataset` now raises a descriptive error listing the
-> directories it expected if any class folder is missing or empty, rather than
-> silently training on whatever it found.
+> ⚠️ **FloodNet ships binary labels (`Flooded` / `Non-Flooded`) and no
+> risk-severity ground truth.** The five-tier scheme in `config.yaml`
+> (`data.num_classes: 5`) therefore **cannot** be trained on FloodNet — the
+> intermediate tiers would have to be invented.
 
-To train on FloodNet, first map its binary folders onto the five tiers:
+> An earlier version of `setup_floodnet.py` shuffled each binary class and
+> re-split it across the five tiers, so `Low Risk` and `Non-Flooded` were the
+> same images and `Medium/High/Flooded` were the same images. Any accuracy
+> reported from that pipeline measured the model's ability to separate random
+> noise. **This is fixed** — the script now maps each image 1:1 from FloodNet
+> ground truth and aborts rather than fabricating tiers.
+
+**Honest binary run on FloodNet:**
 
 ```bash
-python setup_floodnet.py --num-classes 5
+python setup_floodnet.py --binary
 ```
 
-Or edit `config.yaml` to match the classes you actually have — for a genuine
-binary run:
+This rewrites `config.yaml` to 2 classes (backing up the original to
+`config.yaml.bak`), copies each image to exactly one class folder, then trains
+both models. Results are genuine flood-detection measurements.
 
-```yaml
-data:
-  num_classes: 2
-  class_names:
-    - "Non-Flooded"
-    - "Flooded"
-  class_colors:
-    - [0, 200, 0]
-    - [139, 0, 0]
-```
+**Genuine five-tier labels** require real risk data — SEN12-FLOOD, or tiers
+derived from DEM/topographic variables (elevation, slope, drainage density,
+distance to water). Point `data.class_names` at those instead.
+
+Folder names must match `data.class_names` **exactly**, including case and
+hyphenation. `FloodDataset` raises a descriptive error listing expected
+directories if any class folder is missing or empty, rather than silently
+training on whatever it found.
 
 Resulting layout (created by `prepare_dataset`, or by hand):
 
