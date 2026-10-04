@@ -21,6 +21,7 @@ from src.models.model_factory import get_model
 from src.preprocessing.augmentation import denormalize
 from src.preprocessing.dataset import load_single_image
 from src.utils.config_loader import load_config
+from src.utils.console import enable_utf8_console
 from src.utils.predictor import FloodPredictor
 from src.visualization.heatmap import (
     GradCAM,
@@ -183,6 +184,9 @@ def predict_single(image_path: str, args, device: torch.device, output_dir: Path
 
 def main():
     args = parse_args()
+
+    enable_utf8_console()
+
     device = torch.device(
         args.device or ("cuda" if torch.cuda.is_available() else "cpu")
     )

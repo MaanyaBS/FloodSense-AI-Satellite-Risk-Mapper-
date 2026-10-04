@@ -22,6 +22,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 
+from src.utils.console import enable_utf8_console
+
+enable_utf8_console()
+
 RAW_DIR  = ROOT / "data" / "raw"
 PROC_DIR = ROOT / "data" / "processed"
 ZIP_NAME = "floodnet-dataset.zip"

@@ -19,6 +19,7 @@ import torch
 from src.models.model_factory import get_model
 from src.preprocessing.dataset import get_dataloaders, prepare_dataset
 from src.utils.config_loader import load_config, set_seed
+from src.utils.console import enable_utf8_console
 from src.utils.trainer import Trainer
 from src.visualization.risk_map import plot_training_history
 
@@ -78,6 +79,8 @@ def parse_args():
 
 def main():
     args = parse_args()
+
+    enable_utf8_console()
 
     # Seed before anything touches an RNG, so model init and split order
     # are reproducible and the ViT-vs-CNN comparison stays controlled.

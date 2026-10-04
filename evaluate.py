@@ -16,6 +16,7 @@ import torch
 from src.models.model_factory import get_model
 from src.preprocessing.dataset import get_dataloaders
 from src.utils.config_loader import load_config, set_seed
+from src.utils.console import enable_utf8_console
 from src.utils.evaluator import (
     compare_models,
     evaluate_model,
@@ -64,6 +65,8 @@ def load_trained_model(model_type: str, device: torch.device):
 
 def main():
     args = parse_args()
+
+    enable_utf8_console()
 
     # Same seed as training, so the weighted sampler and any augmentation
     # randomness replay identically and the comparison is apples-to-apples.

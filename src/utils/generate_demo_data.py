@@ -430,6 +430,10 @@ def generate_demo_data(
 if __name__ == "__main__":
     import argparse
 
+    from src.utils.console import enable_utf8_console
+
+    enable_utf8_console()
+
     parser = argparse.ArgumentParser(description="Generate synthetic flood demo data")
     parser.add_argument("--n", type=int, default=200, help="Images per class")
     parser.add_argument("--size", type=int, default=IMG_SIZE, help="Image size")
