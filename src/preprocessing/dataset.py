@@ -103,7 +103,7 @@ class FloodDataset(Dataset):
                 + f"\n\nConfigured classes ({len(self.class_to_idx)}): "
                 + ", ".join(self.class_to_idx.keys())
                 + "\nDirectory names must match these exactly. FloodNet ships a "
-                "binary layout (Flooded/Non-Flooded) — map those folders onto the "
+                "binary layout (Flooded/Non-Flooded); map those folders onto the "
                 "five risk tiers before training, or set "
                 "data.class_names/data.num_classes in config.yaml."
             )

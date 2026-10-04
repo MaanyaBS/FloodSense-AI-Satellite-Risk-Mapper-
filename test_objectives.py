@@ -122,9 +122,15 @@ c = FloodDataset(tmp / "good")
 first_c = [str(p) for p, _ in c.samples]
 check("a different seed changes the order", first_a != first_c)
 
-# get_dataloaders must not ignore num_workers.
+# get_dataloaders expects a prepared processed_dir containing train/ val/ test/
+# subdirectories, one per class. Build that layout explicitly.
+proc = tmp / "processed"
+for split in ("train", "val", "test"):
+    for c in CLASSES:
+        make_images(proc / split, c, n=6)
+
 try:
-    loaders = get_dataloaders(tmp, batch_size=2, num_workers=0)
+    loaders = get_dataloaders(proc, batch_size=2, num_workers=0)
     check(
         "num_workers=0 honoured",
         loaders["train"].num_workers == 0,
@@ -138,12 +144,18 @@ try:
         imgs.ndim == 4 and labels.ndim == 1,
         f"images {tuple(imgs.shape)}, labels {tuple(labels.shape)}",
     )
+    check(
+        "image tensor matches configured size",
+        imgs.shape[-1] == cfg["data"]["image_size"]
+        and imgs.shape[-2] == cfg["data"]["image_size"],
+        f"{tuple(imgs.shape)} vs image_size={cfg['data']['image_size']}",
+    )
 except Exception as e:  # noqa: BLE001
     check("get_dataloaders honours num_workers", False, f"{type(e).__name__}: {e}")
 
 # Default should come from config, not a hardcoded 0.
 try:
-    d = get_dataloaders(tmp, batch_size=2)
+    d = get_dataloaders(proc, batch_size=2)
     check(
         "default num_workers comes from config",
         d["train"].num_workers == cfg["training"]["num_workers"],
