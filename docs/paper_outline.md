@@ -1,153 +1,165 @@
 # Paper Outline — IEEE Format
 
-**Working title:** *Are Flood Risk Classifiers Measuring What We Think? Label Integrity in Vision-Transformer Flood Mapping*
+**Title:** Are Flood Risk Classifiers Measuring What They Are Trained On? Label Provenance in Vision-Transformer Flood Mapping
 
-**Venue recommendation:** IEEE Access — 6–8 pages, single column, suits a systems/benchmark contribution. A CVPR/ICCV submission would need a genuinely novel *algorithm*; this paper's contribution is methodological, so IEEE Access (or an IEEE conference in the applications/signal-processing track, e.g. ICASSP/ICIP) is the realistic target.
+**Venue:** IEEE Access — single column, 6–8 pages. A CVPR/ICCV submission requires a novel *algorithm*; this contribution is methodological, so IEEE Access (or an applications-track conference such as ICASSP/ICIP) is the realistic target.
+
+**Structure compliance:** see `docs/ieee_compliance.md` for the full IEEE Author Center requirements.
 
 ---
 
-## Abstract (150–250 words)
+## Section order (mandatory per IEEE)
 
-Structure, in order:
+```
+Title → Authors → Abstract → Keywords → First footnote
+→ I. Introduction → II. Methodology → III. Results
+→ IV. Discussion → V. Conclusion → References → Acknowledgments
+```
 
-1. **Context** — Vision transformers now widely applied to flood mapping from satellite imagery, with reported accuracies above 90%
-2. **Problem** — but the underlying labels are of unverified provenance; we show a common pipeline shortcut manufactures five-class severity labels from a binary dataset by random re-splitting
-3. **Consequence** — reported gains measure the artifact, not flood severity
-4. **Method** — we formalise label-provenance auditing for flood-mapping pipelines, implement a 34-check test suite that detects four defect classes, and run a protocol-controlled ViT-B/16 vs EfficientNet-B3 comparison
-5. **Result** — (fill with measured numbers; the fabricated-label pipeline scores X, verified binary scores Y)
-6. **Contribution** — reproducible audit tooling plus honest protocol for the field
+There is **no standalone Related Work section.** IEEE folds the literature review into the Introduction.
+
+---
+
+## Abstract
+
+Constraints: single paragraph, 250 words max, no abbreviations, no citations, no equations, no mathematical symbols.
+
+Draft in this order once results exist:
+
+1. **Context** — vision transformers are widely applied to flood mapping from satellite imagery, with reported accuracies above 90%
+2. **Problem** — those labels are of unverified provenance; we show a common pipeline shortcut manufactures five-class severity labels from a binary dataset by random re-splitting
+3. **Consequence** — reported gains measure the artifact rather than flood severity
+4. **Method** — we formalise label-provenance auditing for flood-mapping pipelines, implement a 34-check test suite detecting four defect classes, and run a protocol-controlled comparison of a vision transformer against a convolutional network
+5. **Result** — fill with measured numbers
+6. **Contribution** — reproducible audit tooling and an honest protocol for the field
 
 ---
 
 ## I. Introduction
 
-- **Para 1 — the stakes.** Flood detection from satellite imagery supports disaster response. Cite the field's shift from manual interpretation to automated DL.
-- **Para 2 — the promise.** ViTs adopted on the argument that global context matters for flood mapping. Cite papers claiming 90%+ accuracy. This framing sets up the critique; don't strawman.
-- **Para 3 — the problem (thesis).** Accuracy figures are only as good as label provenance. FloodNet, the field's standard benchmark, is binary: Flooded / Non-Flooded. It carries **no severity ground truth**.
-- **Para 4 — the failure mode.** Describe the re-split mechanism precisely (with the actual code). Show `Low Risk` and `Non-Flooded` become the same images. This is a dataset-shortcut / spurious-correlation pathology.
-- **Para 5 — why it went unnoticed.** Five-class schemes look more useful operationally; the intermediate tiers are exactly the ones an application wants, so people synthesise them rather than abandon them.
-- **Para 6 — contributions.** Bullet list, numbered (1)–(4), matching the paper's sections.
+IEEE requires the introduction to include the literature review, position the work in the field, show novelty, and state the research question and its importance.
+
+### Paragraph structure
+
+| ¶ | Content |
+|---|------|
+| 1 | Stakes — flood detection supports disaster response; field has moved from manual interpretation to automated deep learning |
+| 2 | The promise — transformers adopted on the argument that global context matters for hydrology; cite papers claiming 90%+ |
+| 3 | **The problem (thesis)** — accuracy figures are only as good as label provenance; the standard benchmark dataset is binary and carries no severity ground truth |
+| 4 | The failure mode — describe the re-split mechanism precisely, with code; show two risk tiers become the same images |
+| 5 | Why it went unnoticed — five-class output is operationally attractive, so people synthesise tiers rather than abandon them |
+| 6 | Contribution list, numbered (1)–(4) |
+
+### Literature review (subsections A–D, folded in per IEEE)
+
+- **A. Flood detection from optical imagery** — post-event UAV and satellite datasets; U-Net and ResNet baselines; binary framing predominates
+- **B. Vision transformers for remote sensing** — ViT, Swin, and their flood/disaster applications; the "global context matters for hydrology" argument originated here and is largely untested
+- **C. Label quality and dataset shortcuts** — Geirhos et al. on shortcut learning; spurious-correlation analysis; dataset documentation literature. **Key cluster — the paper's novelty is anchored here.**
+- **D. Explainability in remote sensing** — Grad-CAM and attention rollout as applied to floods; maps are reported but rarely quantified
 
 ### Contributions
 
-1. Formalisation of **label provenance auditing** as a prerequisite step for flood-mapping evaluation, and a taxonomy of four defect classes (fabricated tiers, silent class-dropping, unseeded runs, ignored data-pipeline parameters)
-2. `test_label_integrity.py` — 18 executable checks that detect fabricated tiers and verify class/label consistency, plus `test_objectives.py` (16 checks) covering reproducibility and loader contracts
-3. A protocol-controlled comparison of ViT-B/16 and EfficientNet-B3 on identical splits under verified labels and fixed seeding
-4. A pointing-game metric for measuring whether ViT attention actually localises flood regions, addressing the field's reliance on unquantified visual attention maps
+1. Formalisation of **label provenance auditing** as a prerequisite for flood-mapping evaluation, and a taxonomy of four defect classes: fabricated severity tiers, silent class-dropping, unseeded runs, and ignored pipeline parameters
+2. `test_label_integrity.py` — 18 executable checks detecting fabricated tiers and verifying class/label consistency; plus `test_objectives.py` (16 checks) covering reproducibility and loader contracts
+3. A protocol-controlled comparison of a vision transformer and a convolutional network on identical splits under verified labels and fixed seeding
+4. A pointing-game metric measuring whether model attention actually localises flood regions, addressing the field's reliance on unquantified visual attention maps
 
 ---
 
-## II. Related Work
+## II. Methodology
 
-Subsections, each 3–5 paragraphs:
+### II-A The re-split mechanism
 
-- **II-A Flood detection from optical imagery** — post-event UAV and satellite datasets; U-Net and ResNet baselines; binary framing predominates
-- **II-B Vision transformers for remote sensing** — ViT, Swin, and their flood/disaster applications; claim the "global context matters for hydrology" argument originated here and is largely untested
-- **II-C Label quality and dataset shortcuts** — Geirhos et al. on shortcut learning; Northcutt's spurious correlation analysis; the "dataset documentation" literature. **This is your key citation cluster.**
-- **II-D Explainability in remote sensing** — Grad-CAM and attention-rollout as used in flood work; note the field reports maps but rarely quantifies them
+Show the six lines of the original `organize_raw()`. Derive formally: with *n* negatives, two risk tiers are disjoint subsets of the same class, so the class-conditional distribution given an image is not identifiable. Any accuracy is attributable to the random seed rather than the scene.
 
----
+### II-B Datasets
 
-## III. The Label Provenance Problem
-
-The technical core. Keep code minimal; reference the repo.
-
-### III-A The re-split mechanism
-Show the six lines of the original `organize_raw()`. Derive formally: with `n` negatives, `Low Risk` and `Non-Flooded` are disjoint subsets of the same class, so `p(class | image)` is not identifiable — the label carries no information the model can use. Any accuracy is attributable to the seed, not the scene.
-
-### III-B Symptom: inflated metrics
-Report your own measured contrast — fabricated vs verified pipeline, same architecture, same splits.
-
-### III-C Four defect classes
-
-| Defect | Mechanism | Consequence |
-|---|---|---|
-| Fabricated severity tiers | random re-split of binary labels | metrics measure seed, not severity |
-| Silent class-dropping | `if not dir.exists(): continue` | trains 1-class, reports ~100% |
-| Unseeded runs | `seed: 42` declared, never read | irreproducible, invalid comparison |
-| Ignored pipeline params | `num_workers` hardcoded to 0 | declared protocol ≠ executed protocol |
-
-### III-D Detection
-Describe the test suite; note all defects were found in an existing codebase without access to its provenance.
-
----
-
-## IV. Methodology
-
-### IV-A Datasets
 - **FloodNet** (BinaLab v1.0) — UAV, post-Hurricane Harvey, binary
-- **Synthetic demo set** — for the CI-level regression tests only; explicitly *not* evidence of flood performance
-- State clearly which runs use which. If SEN12-FLOOD is unavailable, say so.
+- **Synthetic demo set** — regression tests only; explicitly not evidence of flood performance
+- State which runs use which. Note SEN12-FLOOD if unavailable.
 
-### IV-B Architectures
-- **ViT-B/16** (`timm`, ImageNet-21k), 224px, 16×16 patches, 196 tokens, 12 heads, 768 dim, last 4 blocks unfrozen, 28.7M trainable
-- **EfficientNet-B3** (ImageNet), last 2 stages unfrozen, 9.3M trainable of 11.5M
-- Report trainable vs total; the earlier README's "86M" obscured the 28.7M actually optimised
+### II-C Architectures
 
-### IV-C Controlled protocol
-Identical: splits, augmentations, optimiser (AdamW, lr 1e-4, wd 0.01), cosine schedule + 5-epoch warmup, weighted cross-entropy, early stopping patience 8, seed 42, `cudnn.deterministic=True`. Only architecture varies.
+| | ViT-B/16 | EfficientNet-B3 |
+|---|---|---|
+| Source | timm, ImageNet-21k | ImageNet |
+| Input | 224px, 16×16 patches, 196 tokens | 224px |
+| Attention heads / width | 12 / 768 | — |
+| Frozen | all but last 4 blocks | all but last 2 stages |
+| **Trainable** | **28.7M** of 86.1M | **9.3M** of 11.5M |
 
-### IV-D Metrics
+Report trainable versus total. Earlier documentation cited total parameters only, obscuring that roughly a third of the transformer is optimised.
+
+### II-D Controlled protocol
+
+Identical across arms: splits, augmentations, AdamW at 1e-4 with weight decay 0.01, cosine schedule with 5-epoch warmup, weighted cross-entropy, early stopping patience 8, seed 42, deterministic cuDNN. Only architecture varies.
+
+### II-E Metrics
+
 Accuracy, macro-F1, per-class precision/recall/F1, IoU, confusion matrices. **Justify macro-F1 over accuracy** — imbalanced flood data rewards majority-class collapse.
 
-### IV-E Pointing-game metric
-Define: for each image, binarise the attention/Grad-CAM map, define the ground-truth flood mask, compute the fraction of the top-attended mass falling inside it. State how you derive masks for FloodNet (pre/post-harvey registration) and any limitations.
+### II-F Pointing-game metric
+
+Define: binarise the attention or Grad-CAM map, define the ground-truth flood mask, compute the fraction of top-attended mass falling inside it. State how masks are derived and any limitations.
 
 ---
 
-## V. Results
+## III. Results — BLOCKED
 
-> **Blocked until training completes.** Structure below; every number must be measured.
+**No numbers exist yet.** The CNN run is in progress; the transformer run has not started; available imagery is synthetic. Do not populate this section with previously documented figures — those trace to the fabricated-label pipeline.
 
-### V-A Effect of label fabrication
-Table: identical model, fabricated vs verified labels. Expect a large gap.
+Planned subsections:
 
-### V-B ViT vs EfficientNet under identical protocol
-Table with trainable params, epoch time, accuracy, macro-F1, IoU, per-class F1.
-
-### V-C Per-class behaviour
-Confusion matrices. Report which tiers fail and why — imbalanced minor tiers typically collapse into neighbours.
-
-### V-D Attention localisation
-Pointing-game scores per class. A ViT with high accuracy but low pointing game has learned texture priors, not hydrology — this is the interpretability result.
-
-### V-E Reproducibility
-Seed-variance across 3 runs (mean ± std). A protocol claiming control must quantify residual variance.
+- **III-A** Effect of label fabrication (fabricated vs verified, same architecture)
+- **III-B** Architecture comparison under identical protocol
+- **III-C** Per-class behaviour and confusion matrices
+- **III-D** Attention localisation (pointing game)
+- **III-E** Seed variance across ≥3 runs per architecture
 
 ---
 
-## VI. Discussion
+## IV. Discussion
 
-- **VI-A** Fabricated labels invert conclusions — a plausible-looking gain that disappears
-- **VI-B** Attention maps ≠ evidence; without pointing game, XAI claims in this literature are unsupported
-- **VI-C** Five-tier operational output needs real risk labels (DEM, slope, drainage density, SAR backscatter). Propose the pipeline, note you have not implemented it
-- **VI-D** Threats to validity: single dataset, single event, UAV-not-satellite, CPU-only training limits epochs, synthetic data used for regression tests only
+- **IV-A** Fabricated labels invert conclusions — a plausible-looking gain that disappears under audit
+- **IV-B** Attention maps are not evidence; without pointing game, interpretability claims in this literature are unsupported
+- **IV-C** Five-tier operational output needs real risk labels (DEM, slope, drainage density, SAR backscatter). Propose the pipeline; state it is not implemented
+- **IV-D** Threats to validity — single dataset, single event, UAV rather than satellite, CPU-only training limits epochs, synthetic data used for regression tests only
+
+IEEE guidance: describe what the results mean and how they contribute to the field.
 
 ---
 
-## VII. Conclusion
+## V. Conclusion
 
-Short. Restate: label provenance must be audited before flood-mapping metrics are reported; we provide tooling and an honest comparison; multi-tier risk needs real terrain labels.
+Short. Restate that label provenance must be audited before flood-mapping metrics are reported; tooling and an honest comparison are provided; genuine multi-tier risk requires terrain-derived labels.
+
+IEEE guidance: *"Be careful not to inflate your findings."*
 
 ---
 
 ## References
 
-Target 25–35. Key clusters: FloodNet / BinaLab, SEN12-FLOOD, ViT (Dosovitskiy), Swin (Liu), EfficientNet (Tan), SegFormer, Geirhos *Shortcut Learning*, Northcutt, Grad-CAM (Selvaraju), attention rollout (Abnar & Zuidema), IEEE Access format guide.
+IEEE numeric style, order of first citation. Format via the IEEE Reference Preparation Assistant. Target 25–35.
+
+Ethics constraint (verbatim): *"Be sure to only cite references that directly support your work. Inflating citations by adding unnecessary references is considered a breach of publishing ethics."*
+
+Key clusters: FloodNet / BinaLab; SEN12-FLOOD; ViT (Dosovitskiy et al.); Swin (Liu et al.); EfficientNet (Tan and Leung); SegFormer; Geirhos et al. on shortcut learning; Northcutt on spurious correlations; Grad-CAM (Selvaraju et al.); attention rollout (Abnar and Zuidema).
 
 ---
 
-## Figures and Tables
+## Figures and tables
+
+Graphics: 300 dpi halftone, 600 dpi line art, RGB, vector preferred for diagrams, 8–10 pt fonts, captions below figures and above tables.
 
 | # | Content |
-|---|---|
-| Fig. 1 | ViT vs CNN architecture, side by side |
-| Fig. 2 | Label fabrication mechanism, diagram |
-| Fig. 3 | Confusion matrices, ViT and CNN, verified labels |
-| Fig. 4 | Grad-CAM and attention rollout with ground-truth flood mask overlaid |
+|---|------|
+| Fig. 1 | Both architectures side by side |
+| Fig. 2 | Label fabrication mechanism |
+| Fig. 3 | Confusion matrices under verified labels |
+| Fig. 4 | Grad-CAM and attention rollout with ground-truth mask overlaid |
 | Fig. 5 | Training curves with seed variance band |
 | Fig. 6 | Pipeline architecture with audit checkpoint marked |
-| Table I | Dataset comparison — FloodNet vs SEN12-FLOOD vs synthetic |
+| Table I | Dataset comparison |
 | Table II | Trainable parameters and inference cost |
 | Table III | Main results — accuracy, macro-F1, IoU, per-class F1 |
 | Table IV | Fabricated vs verified labels, identical model |
@@ -156,10 +168,14 @@ Target 25–35. Key clusters: FloodNet / BinaLab, SEN12-FLOOD, ViT (Dosovitskiy)
 
 ---
 
-## What you need before this is submittable
+## Blockers before submission
 
-1. **Completed training runs** — CNN 8 epochs running now; ViT to follow
-2. **At least 3 seeds per architecture** for variance
-3. **FloodNet or SEN12-FLOOD** for real imagery. Demo data cannot support a flood paper.
-4. **Ground-truth masks** for the pointing game
-5. **Venue confirmation** — changes page budget and section weighting
+| Blocker | Detail |
+|---|---|
+| Affiliation | department, university, city, state, postal code, country, email |
+| Prior-publication statement | is this part of an existing thesis or project report? |
+| Funding statement | required in the first footnote regardless |
+| Results section | no measurements exist |
+| Real imagery | synthetic data cannot support a flood-mapping claim |
+| Seed variance | ≥3 seeds per architecture |
+| Ground-truth masks | required for the localisation metric |
