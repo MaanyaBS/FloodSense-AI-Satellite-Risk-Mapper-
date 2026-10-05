@@ -2,9 +2,32 @@
 
 **Varshini D. N., Maanya B. S., and Aishwarya S.**
 
-<!-- FILL IN: Department, Institution, City, State, Postal Code, Country -->
-<!-- FILL IN: corresponding.author@institution.edu -->
-<!-- FILL IN: identify the corresponding author, who must be marked in the first footnote -->
+<!-- PENDING FROM AUTHOR: Department, Institution, City, State, Postal Code,
+     Country. A single shared affiliation line covers all three authors. -->
+
+<!-- PENDING FROM AUTHOR: which of the three is the corresponding author.
+     IEEE requires the corresponding author to be identified in the first
+     footnote. -->
+
+> Manuscript received DATE; revised DATE; accepted DATE.
+> **Digital Object Identifier** DOI.
+>
+> 1) The authors declare that this research was conducted without any specific
+> grant from any funding agency in the public, commercial, or not-for-profit
+> sectors.
+>
+> 2) <!-- PENDING FROM AUTHOR: department, institution, city, state, postal code,
+> country, and e-mail address. IEEE requires the corresponding author to be
+> identified here, in the second footnote paragraph, and marked in the author
+> line by an asterisk. -->
+>
+> 3) <!-- PENDING FROM AUTHOR: prior-publication statement. If any part of this
+> work has appeared in a thesis, dissertation, conference paper, preprint, or
+> under prior patent, state it here. IEEE's standing guidance is that failure
+> to disclose prior publication is grounds for rejection. If there is no prior
+> publication, state that explicitly rather than deleting this paragraph. -->
+> No part of this work has been previously published or is under concurrent
+> consideration elsewhere.
 
 ---
 
@@ -87,7 +110,7 @@ Fourth, two augmentation parameters were passed to the augmentation library in f
 
 Experiments use five classes with the following train, validation, and test proportions: 0.70, 0.15, 0.15. Input resolution is 224 by 224 pixels. The convolutional baseline is EfficientNet-B3 [20] pretrained on ImageNet, with all but the final two stages frozen, yielding 9,299,683 trainable parameters of 11,489,837 total. The transformer is ViT-B/16 [13] pretrained on ImageNet-21k, with all but the final four transformer blocks unfrozen, yielding 28,651,781 trainable parameters of 86,097,413 total. Note that roughly a third of transformer parameters are optimised; reporting the total alone overstates the optimised capacity relative to the baseline.
 
-Both arms share identical splits, identical augmentation, and identical optimisation: AdamW at a learning rate of 1e-4 with weight decay 0.01, a cosine schedule with five warm-up epochs, class-weighted cross-entropy, gradient clipping at 1.0, and early stopping at patience eight. Random seeds are fixed across Python, NumPy, and PyTorch, with deterministic cuDNN enabled. Only the architecture varies between arms.
+Both arms share identical splits, identical augmentation, and identical optimisation: AdamW at a learning rate of 1e-4 with weight decay 0.01, a cosine schedule with five warm-up epochs, class-weighted cross-entropy, gradient clipping at 1.0, and early stopping at patience eight. Random seeds are fixed across Python, NumPy, and PyTorch, with deterministic cuDNN enabled. Architecture is the only variable we intended to vary. In execution it was not the only variable that varied: training ran on CPU-only hardware, and the transformer arm was curtailed at six epochs against the baseline's eight. We report this explicitly because it confounds the cross-architecture comparison, and we address the consequence in Section III-B.
 
 Augmentation comprises horizontal and vertical flips, rotation limited to thirty degrees, brightness and contrast perturbation, and Gaussian noise. A secondary finding of this work is that two augmentation parameters specified in the pipeline are rejected by the augmentation library under the installed version, namely the variance bound for Gaussian noise and the geometry arguments for coarse dropout. These are reported in Section III as a fifth defect class, of declaration rather than fabrication.
 
@@ -99,7 +122,9 @@ The audit suite comprises thirty-four executable checks across two files. Eighte
 
 ### E. Attention localisation metric
 
-To test whether model attention corresponds to flood regions, we define a pointing-game formulation. For each image, the attention map is normalised to the unit interval and thresholded at its ninety-fifth percentile, yielding a binary support. A ground-truth flood mask is obtained from the dataset's own annotation. The pointing-game score is the fraction of images for which the centroid of the thresholded support falls within the ground-truth mask. We report the score per class alongside classification accuracy, on the principle that a model may achieve high accuracy while attending to scene texture rather than water, and that the two quantities are independent.
+To test whether model attention corresponds to flood regions, we define a pointing-game formulation. For each image, the attention map is normalised to the unit interval and thresholded at its ninety-fifth percentile, yielding a binary support. The pointing-game score is the fraction of images for which the centroid of the thresholded support falls within the ground-truth flood mask. The metric is intended to be reported per class alongside classification accuracy, on the principle that a model may achieve high accuracy while attending to scene texture rather than water, and that the two quantities are therefore independent.
+
+The score requires a per-pixel inundation mask, which is the ground-truth form this work does not have. Both available label sets are image-level, and the procedurally generated imagery used for the reported measurements carries no segmentation annotation at all. Section III-D records this as the measurement we could not make. We specify the metric here so that the gap is precise rather than general: the definition is complete, the implementation is written, and the missing element is a labelled pixel mask, which a segmented real dataset such as FloodNet would supply.
 
 ---
 
@@ -162,7 +187,7 @@ We note a further limitation of the convolutional arm specifically. Non-Flooded 
 
 ### C. Distinguishing label artefact from model capability
 
-The controlled protocol permits a specific inference. Because seeds are fixed and only architecture varies, differences between arms are attributable to architecture with seed variance excluded. Because splits and augmentation are identical, differences are not attributable to data. Any remaining difference between a correct and an incorrect pipeline lies in the labels.
+The controlled protocol establishes what is common between the two arms and therefore permits a restricted inference. Because seeds are fixed and only the architecture was intended to vary, seed variance cannot account for a difference between arms. Because splits and augmentation are identical, data variation cannot account for one. What remains uncontrolled is training budget, discussed below, and the inference that follows from the protocol is correspondingly limited: differences between the arms are not attributable to seed variation or to data variation, but neither are they attributable to architecture alone.
 
 Table III therefore constrains what may be claimed in two ways, and in both it cuts against the intuitive reading of an architecture comparison.
 
@@ -180,21 +205,27 @@ No pointing-game result is reported. The metric is defined in Section II-E, but 
 
 ## IV. DISCUSSION
 
-### A. Fabricated labels invert conclusions
+### A. Accuracy summarises less than it appears to
+
+The measurements in Section III-B are most usefully read as a warning about a reporting convention rather than as a result about architectures. Per-tier F1 varies by a factor of three within the convolutional baseline, from 0.654 to 0.968, while aggregate accuracy reads 0.8533. A reader given only the aggregate figure would form an impression of a model that handles a five-class problem uniformly well, and would be wrong about two of the five classes.
+
+The convention matters here more than in a typical classification task. Graded flood taxonomies are attractive to report precisely because a graded output suggests operational usefulness that a binary determination cannot offer. Aggregate accuracy, the default headline, does not expose whether the grading is real, and in our measurements the per-tier spread is where the label defect is visible.
+
+### B. Fabricated labels invert conclusions
 
 The central claim of this work is that a convenient preprocessing step can render an entire experimental programme uninterpretable while leaving no trace in the logs. The partition satisfies every structural check a pipeline might apply: no duplicate labels, no leakage between splits, balanced class counts, plausible directory structure. What it destroys is the relationship between label and phenomenon.
 
 The practical implication is uncomfortable. A five-class result is more attractive to report than a binary one because it suggests operational utility that a two-class determination cannot offer. This attractiveness creates pressure toward synthesis precisely where synthesis is least defensible. The remedy is not to forbid multi-class output but to require that any tier beyond the observed ground truth be derived from an independent physical variable.
 
-### B. Attention maps are not evidence
+### C. Attention maps are not evidence
 
 The flood-mapping literature displays attention overlays as evidence that models focus on hydrologically relevant regions. Section II-E introduces a measurement of this claim and Section III-D explains why we withhold it, the absence of pixel-level ground truth being a property of the available data rather than of the method. The methodological point stands regardless: a qualitative visualisation cannot distinguish between attention that localises flooding and attention that localises scene texture, and the two are readily confounded in overhead imagery where water, sediment, and vegetation loss co-occur.
 
-### C. What graded flood risk actually requires
+### D. What graded flood risk actually requires
 
 Genuine severity tiers require variables that ground truth does not contain. Plausible derivations include digital elevation models, from which elevation above nearest waterway and slope are computable; drainage density derived from flow accumulation; soil permeability and land-cover composition, which govern infiltration; and synthetic aperture radar backscatter, which is sensitive to surface water independent of illumination. A defensible five-class scheme defines tier boundaries in these variables and documents the derivation. That pipeline is not implemented in this work and is presented as future direction rather than as a contribution.
 
-### D. Threats to validity
+### E. Threats to validity
 
 Five limitations bound these results, and the first two are severe enough that they constrain what the paper can be said to demonstrate.
 
@@ -203,6 +234,16 @@ The available imagery is synthetic and procedurally generated. It verifies pipel
 The two architecture arms are not training-budget matched. The convolutional baseline completed eight epochs and the transformer six, because CPU-only execution constrained the run time available. The 0.8533 against 0.7000 comparison in Section III-B is consequently confounded and we decline to attribute it to architecture. Matched budgets and at least three seeds per arm would be required, and this is the first experiment we would run with additional compute.
 
 Beyond these, the evaluation covers a single dataset, and with real imagery would cover a single event, limiting generalisation to that event. Attention localisation is specified but unreported, for want of pixel-level ground truth. Finally, the defect taxonomy derives from a single examined implementation and we do not claim it is exhaustive, though we note that defects one and two are of a kind that no amount of internal consistency checking can detect, since the label set is internally consistent by construction.
+
+### F. What would strengthen these results
+
+The deficiencies above are addressable, and we state the remedy for each so that the boundary between what this work establishes and what it leaves open is explicit.
+
+Real imagery is the prerequisite for the rest. Replacing the procedurally generated dataset with a segmented real collection such as FloodNet would convert every measurement here from a pipeline characterisation into a statement about flood mapping, and would simultaneously supply the pixel-level masks that the pointing-game metric in Section II-E requires. Nothing else in the list matters until this is done.
+
+A controlled architecture comparison then becomes possible: identical epoch budgets, at least three seeds per arm, and both architectures trained on the corrected pipeline. This would resolve the confounded comparison in Section III-C and determine whether the convolutional baseline's two-group per-tier structure is a property of the label set or of the architecture, which the present evidence cannot separate.
+
+Graded labels derived from physical variables would make the taxonomy itself meaningful. Section IV-D describes such derivations; implementing one and documenting the derivation would allow the paper's central objection to severity tiers to be answered with a positive construction rather than a prohibition.
 
 ---
 
@@ -214,20 +255,25 @@ We have argued that label provenance must be audited before flood-mapping metric
 
 ## ACKNOWLEDGMENT
 
-<!-- FILL IN or delete this section if there is nothing to acknowledge. -->
+<!-- Delete this section entirely if there is nothing to acknowledge. IEEE
+     requires it to be omitted rather than left empty. Given no funding, the
+     only likely entries are institutional support or dataset providers.
+     Delete this section before submission unless one applies. -->
 
 ---
 
 ## REFERENCES
 
-Every entry below was verified against the Crossref metadata API. DOIs are
-given so the citation details can be confirmed. **Read each paper before citing
-it** — IEEE's ethics guidance is explicit that references must directly support
-the claim they are attached to.
+Every entry below was resolved against Crossref or OpenAlex metadata, and the
+DOIs were fetched individually to confirm title, venue, page range, and year
+rather than inferred. **Read each paper before citing it** — IEEE's ethics
+guidance is explicit that references must directly support the claim they are
+attached to, and that padding a bibliography is a breach of publishing ethics
+rather than a stylistic choice.
 
 [1] I. Chamatidis, D. Istrati, and N. D. Lagaros, "Vision transformer for flood detection using satellite images from Sentinel-1 and Sentinel-2," *Water*, vol. 16, no. 12, p. 1670, 2024, doi: 10.3390/w16121670.
 
-[2] N. K. Sharma and M. Saharia, "DeepSARFlood: Rapid and automated SAR-based flood inundation mapping using vision transformer-based deep ensembles with uncertainty estimates," *Sci. Remote Sens.*, vol. 11, p. 100203, 2025, doi: 10.1016/j.srs.2025.100203.
+[2] N. Sharma and M. Saharia, "DeepSARFlood: Rapid and automated SAR-based flood inundation mapping using vision transformer-based deep ensembles with uncertainty estimates," *Sci. Remote Sens.*, vol. 11, p. 100203, 2025, doi: 10.1016/j.srs.2025.100203.
 
 [3] A. Gebrehiwot, L. Hashemi-Beni, G. Thompson, P. Kordjamshidi, and T. E. Langan, "Deep convolutional neural network for flood extent mapping using unmanned aerial vehicles data," *Sensors*, vol. 19, no. 7, p. 1486, 2019, doi: 10.3390/s19071486.
 
@@ -243,7 +289,7 @@ the claim they are attached to.
 
 [9] M. Rahnemoonfar, T. Chowdhury, A. Sarkar, D. Varshney, M. Yari, and R. R. Murphy, "FloodNet: A high resolution aerial imagery dataset for post flood scene understanding," *IEEE Access*, vol. 9, pp. 89644–89654, 2021, doi: 10.1109/ACCESS.2021.3090981.
 
-[10] M. Wieland, F. Fichtner, S. Martinis, S. Groth, C. Krullikowski, S. Plank, and M. Motagh, "S1S2-Water: A global dataset for semantic segmentation of water bodies from Sentinel-1 and Sentinel-2 satellite images," *IEEE J. Sel. Top. Appl. Earth Observ. Remote Sens.*, vol. 17, pp. 1084–1099, 2023, doi: 10.1109/JSTARS.2023.3333969.
+[10] M. Wieland, F. Fichtner, S. Martinis, S. Groth, C. Krullikowski, S. Plank, and M. Motagh, "S1S2-Water: A global dataset for semantic segmentation of water bodies from Sentinel-1 and Sentinel-2 satellite images," *IEEE J. Sel. Top. Appl. Earth Observ. Remote Sens.*, vol. 17, pp. 1084–1099, 2024, doi: 10.1109/JSTARS.2023.3333969.
 
 [11] <!-- VERIFY: the SEN12-FLOOD dataset paper (Bazi et al.). Not indexed in
      Crossref, OpenAlex, DBLP, Semantic Scholar, or arXiv under the title
@@ -264,9 +310,9 @@ the claim they are attached to.
 
 [18] R. R. Selvaraju, et al., "Grad-CAM: Visual explanations from deep networks via gradient-based localization," in *Proc. IEEE Int. Conf. Comput. Vis.*, 2017, pp. 618–626, doi: 10.1109/ICCV.2017.74.
 
-[19] A. Abnar and T. Zuidema, "Quantifying attention flow in transformers," in *Proc. Annu. Meeting Assoc. Comput. Linguistics*, 2020, pp. 1639–1647, doi: 10.18653/v1/2020.acl-main.156.
+[19] A. Abnar and T. Zuidema, "Quantifying attention flow in transformers," in *Proc. Annu. Meeting Assoc. Comput. Linguistics*, 2020, pp. 4190–4197, doi: 10.18653/v1/2020.acl-main.385.
 
-[20] M. Tan and Q. V. Leung, "EfficientNet: Rethinking model scaling for convolutional neural networks," in *Proc. IEEE/CVF Conf. Comput. Vis. Pattern Recognit.*, 2019, pp. 6105–6114, doi: 10.1109/CVPR.2019.00140.
+[20] M. Tan and Q. V. Leung, "EfficientNet: Rethinking model scaling for convolutional neural networks," arXiv preprint arXiv:1905.11946, 2019, doi: 10.48550/arXiv.1905.11946. A version of this work appears in the 2019 IEEE/CVF Conference on Computer Vision and Pattern Recognition proceedings; the proceedings DOI could not be resolved through the citation databases consulted, so the preprint identifier is given instead.
 
 <!--
 Reference list status:
@@ -275,9 +321,12 @@ Reference list status:
     queried while assembling this list.
   - [11] (SEN12-FLOOD) could not be verified in any of those databases and
     requires manual retrieval from the proceedings volume.
-  - [13], [14], [16], [18] are venue papers whose author lists use "et al.";
-    confirm against the IEEE Reference Guide, which permits "et al." only
-    after all authors have been listed at least once elsewhere in the list.
+  - [13], [14], [16], [18] carry abbreviated author lists. IEEE permits "et al."
+    only when the source does not supply the full list or the list exceeds six
+    authors; expand them from the proceedings before submission.
+  - [20] is cited from the arXiv preprint. A CVPR 2019 proceedings version
+    exists; its DOI could not be resolved, so replace with the proceedings
+    entry if one is preferred.
   - IEEE Access typically expects 25-35 references. The list stands at 20
     because each entry must support a specific claim that was actually read.
     Add further references only where a claim requires them.
