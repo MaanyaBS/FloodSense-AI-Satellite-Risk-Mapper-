@@ -1,13 +1,11 @@
 # Are Flood Risk Classifiers Measuring What They Are Trained On? Label Provenance in Vision-Transformer Flood Mapping
 
-**Varshini D. N., Maanya B. S., and Aishwarya S.**
+**Varshini D. N.*, Maanya B. S., and Aishwarya S.**
 
-<!-- PENDING FROM AUTHOR: Department, Institution, City, State, Postal Code,
-     Country. A single shared affiliation line covers all three authors. -->
+*Department of Computer Science and Engineering, Jyothy Institute of Technology, Bengaluru 560082, India*
 
-<!-- PENDING FROM AUTHOR: which of the three is the corresponding author.
-     IEEE requires the corresponding author to be identified in the first
-     footnote. -->
+<!-- CONFIRM: the department name above is inferred. If the department has a
+     different official name, replace it here and in footnote paragraph 2. -->
 
 > Manuscript received DATE; revised DATE; accepted DATE.
 > **Digital Object Identifier** DOI.
@@ -16,18 +14,19 @@
 > grant from any funding agency in the public, commercial, or not-for-profit
 > sectors.
 >
-> 2) <!-- PENDING FROM AUTHOR: department, institution, city, state, postal code,
-> country, and e-mail address. IEEE requires the corresponding author to be
-> identified here, in the second footnote paragraph, and marked in the author
-> line by an asterisk. -->
+> 2) The authors are with the Department of Computer Science and Engineering,
+> Jyothy Institute of Technology, Pipeline Road, Tatguni, Bengaluru 560082,
+> India. Corresponding author: Varshini D. N.
+> <!-- PENDING FROM AUTHOR: the corresponding author's e-mail address. IEEE
+     requires it in this paragraph. A placeholder must not survive into a
+     submitted manuscript. -->
 >
-> 3) <!-- PENDING FROM AUTHOR: prior-publication statement. If any part of this
-> work has appeared in a thesis, dissertation, conference paper, preprint, or
-> under prior patent, state it here. IEEE's standing guidance is that failure
-> to disclose prior publication is grounds for rejection. If there is no prior
-> publication, state that explicitly rather than deleting this paragraph. -->
-> No part of this work has been previously published or is under concurrent
+> 3) No part of this work has been previously published or is under concurrent
 > consideration elsewhere.
+> <!-- PENDING FROM AUTHOR: confirm the statement above is true. If any part of
+     this work has appeared in a thesis, dissertation, conference paper,
+> preprint, or under prior patent, restate this paragraph to disclose it.
+     IEEE treats undisclosed prior publication as grounds for rejection. -->
 
 ---
 
