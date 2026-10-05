@@ -10,7 +10,7 @@
 
 ## Abstract
 
-Automated flood mapping from satellite imagery has moved rapidly from manual expert interpretation to deep learning, with vision transformers reporting flood-detection accuracies above ninety percent. We observe that a substantial share of these reported gains rest on labels whose provenance has never been audited. Specifically, we identify and characterise a pipeline shortcut that manufactures a five-class flood-severity taxonomy from a binary benchmark dataset by randomly re-splitting each genuine class into several synthetic tiers. Because the resulting tiers are disjoint subsets of a single ground-truth class, the label carries no information recoverable from the image, and measured accuracy instead reflects the random seed. We formalise label-provenance auditing as a prerequisite for flood-mapping evaluation, and we present a taxonomy of five defect classes observed in practice: fabricated severity tiers, silent class-dropping, undeclared random seeds, data-pipeline parameters that diverge between declaration and execution, and augmentation parameters rejected at runtime. We implement an executable audit suite of thirty-four checks that detects all five, and we demonstrate that a convolutional baseline trained under a controlled protocol reaches an accuracy of 85.33 percent on a five-class problem while exhibiting pronounced confusion between adjacent severity tiers, which we argue reflects intrinsic tier ambiguity rather than model deficiency. Our contributions are an auditing methodology, reproducible detection tooling, and an evidence-based argument that graded flood-risk output requires terrain-derived risk labels rather than synthetic severity tiers.
+Automated flood mapping from satellite imagery has moved rapidly from manual expert interpretation to deep learning, with vision transformers reporting flood-detection accuracies above ninety percent. We observe that a substantial share of these reported gains rest on labels whose provenance has never been audited. Specifically, we identify and characterise a pipeline shortcut that manufactures a five-class flood-severity taxonomy from a binary benchmark dataset by randomly re-splitting each genuine class into several synthetic tiers. Because the resulting tiers are disjoint subsets of a single ground-truth class, the label carries no information recoverable from the image, and measured accuracy instead reflects the random seed. We formalise label-provenance auditing as a prerequisite for flood-mapping evaluation, and we present a taxonomy of five defect classes observed in practice: fabricated severity tiers, silent class-dropping, undeclared random seeds, data-pipeline parameters that diverge between declaration and execution, and augmentation parameters rejected at runtime. We implement an executable audit suite of thirty-four checks that detects all five, and we report measurements from two architectures under a controlled protocol, finding that per-tier performance varies by a factor of three within a single architecture and that the aggregate accuracy figure conceals this variation entirely. Our contributions are an auditing methodology, reproducible detection tooling, and an evidence-based argument that graded flood-risk output requires terrain-derived risk labels rather than synthetic severity tiers.
 
 **Index Terms**—flood mapping, vision transformers, dataset shortcuts, label provenance, remote sensing, explainability, reproducibility.
 
@@ -26,29 +26,29 @@ This paper raises a methodological question that precedes the architectural one:
 
 ### A. Flood detection from optical imagery
 
-Flood detection datasets fall into two broad families. Post-event collections such as FloodNet [9], assembled from unmanned aerial vehicle (UAV) survey following Hurricane Harvey, provide pixel or image-level inundation labels at high spatial resolution. Multi-temporal archives such as SEN12-FLOOD [10], pairing Sentinel-1 synthetic aperture radar with Sentinel-2 optical imagery, provide broader coverage and the temporal repetition required for change detection.
+Flood detection datasets fall into two broad families. Post-event collections such as FloodNet [9], assembled from unmanned aerial vehicle (UAV) survey following Hurricane Harvey, provide pixel or image-level inundation labels at high spatial resolution. Multi-temporal archives provide broader coverage and the temporal repetition required for change detection, typically pairing Sentinel-1 synthetic aperture radar with Sentinel-2 optical imagery as in S1S2-Water [10], and the Benchmarking Flood Mapping Methods collections such as SEN12-FLOOD [11], which are not indexed in the citation databases consulted here.
 
 Across both families, a consistent pattern holds: ground truth is binary. An image is flooded or it is not. FloodNet v1.0 in particular provides two categories, inundated and not inundated, and nothing further [9]. This is not an oversight but a consequence of how the labels were derived, from visual interpretation of post-event survey imagery, which supports a determination of inundation but not of severity.
 
-Work using these datasets is correspondingly framed as binary detection. U-Net [11] and its successors dominate, applied at the pixel level or at the image level [3], [4], [7], [11]. The framing is methodologically sound: the label supports a binary determination, and a binary model reports a binary determination.
+Work using these datasets is correspondingly framed as binary detection. U-Net [12] and its successors dominate, applied at the pixel level or at the image level [3], [4], [7], [12]. The framing is methodologically sound: the label supports a binary determination, and a binary model reports a binary determination.
 
 ### B. Vision transformers for remote sensing
 
-Vision transformers [12] and hierarchical variants such as Swin [13] have been adapted extensively to remote sensing, spanning land-cover classification, object detection, and change detection. Applications to disaster and flood assessment follow, typically fine-tuning a pretrained backbone and comparing against a convolutional baseline [1], [2], [7], [8].
+Vision transformers [13] and hierarchical variants such as Swin [14] have been adapted extensively to remote sensing, spanning land-cover classification, object detection, and change detection. Applications to disaster and flood assessment follow, typically fine-tuning a pretrained backbone and comparing against a convolutional baseline [1], [2], [7], [8].
 
 The comparative finding is consistent across studies: transformers are competitive with, or modestly superior to, convolutional networks at matched input resolution and pretraining. The margin is generally small. A recurring methodological feature is that reported differences are small enough that seed variance matters, and yet multi-seed reporting is uncommon.
 
 ### C. Label quality and dataset shortcuts
 
-The concern we raise is not specific to remote sensing. Geirhos et al. [14] demonstrated that deep networks trained on degraded image datasets converge on non-target features, preferring background texture to shape information when the two are correlated in training but not in deployment. Northcutt et al. [15] catalogued spurious correlations across standard benchmarks, finding that many nominally distinct benchmarks encode the same biases, and argued for dataset documentation practices that record such dependencies. Rohrbach et al. [16] formalised dataset interfaces, arguing that a dataset should specify the decision task it encodes rather than merely the samples it contains.
+The concern we raise is not specific to remote sensing. Geirhos et al. [15] demonstrated that deep networks trained on degraded image datasets converge on non-target features, preferring background texture to shape information when the two are correlated in training but not in deployment. Northcutt et al. [16] catalogued spurious correlations across standard benchmarks, finding that many nominally distinct benchmarks encode the same biases, and argued for dataset documentation practices that record such dependencies. Bender and Friedman [17] argued for explicit data statements alongside published datasets, recording intended use, collection process, and known biases, so that a dataset's decision content is legible to a reader rather than implicit in its directory structure.
 
 The common thread is that a dataset encodes a decision, and models inherit that decision. When a label set is assembled by a procedure rather than by ground truth, the procedure determines what the model learns and what the reported metric measures.
 
 ### D. Explainability in remote sensing
 
-Gradient-based class activation mapping [17] and attention rollout [18] are widely applied to flood mapping, generally producing qualitative figures showing that the model attends to water or terrain. Such figures are persuasive and unverified. Whether attention mass coincides with genuinely flooded regions is a measurable question, and one that the flood literature has largely not asked.
+Gradient-based class activation mapping [18] and attention rollout [19] are widely applied to flood mapping, generally producing qualitative figures showing that the model attends to water or terrain. Such figures are persuasive and unverified. Whether attention mass coincides with genuinely flooded regions is a measurable question, and one that the flood literature has largely not asked.
 
-Our contributions are fourfold. First, we formalise label-provenance auditing for flood-mapping pipelines and present a taxonomy of five defect classes observed in a working implementation. Second, we present an executable audit suite of thirty-four checks that detects all five classes, including the fabrication mechanism, which is verified by asserting the absence of the specific code patterns. Third, we report a controlled-protocol baseline measurement characterising per-tier behaviour under graded labels. Fourth, we introduce a pointing-game formulation for quantifying whether model attention localises flood regions, providing the measurement that the qualitative literature lacks.
+Our contributions are fourfold. First, we formalise label-provenance auditing for flood-mapping pipelines and present a taxonomy of five defect classes observed in a working implementation. Second, we present an executable audit suite of thirty-four checks that detects all five classes, including the fabrication mechanism, which is verified by asserting the absence of the specific code patterns. Third, we report per-tier measurements from two architectures under a controlled protocol, showing that aggregate accuracy conceals a threefold spread in per-tier F1 and that the cross-architecture comparison is confounded by unmatched training budgets. Fourth, we introduce a pointing-game formulation for quantifying whether model attention localises flood regions, providing the measurement that the qualitative literature lacks, and we explain why it cannot yet be reported on the data available to us.
 
 ---
 
@@ -85,7 +85,7 @@ Fourth, two augmentation parameters were passed to the augmentation library in f
 
 ### C. Experimental setup
 
-Experiments use five classes with the following train, validation, and test proportions: 0.70, 0.15, 0.15. Input resolution is 224 by 224 pixels. The convolutional baseline is EfficientNet-B3 [19] pretrained on ImageNet, with all but the final two stages frozen, yielding 9,299,683 trainable parameters of 11,489,837 total. The transformer is ViT-B/16 [12] pretrained on ImageNet-21k, with all but the final four transformer blocks unfrozen, yielding 28,651,781 trainable parameters of 86,097,413 total. Note that roughly a third of transformer parameters are optimised; reporting the total alone overstates the optimised capacity relative to the baseline.
+Experiments use five classes with the following train, validation, and test proportions: 0.70, 0.15, 0.15. Input resolution is 224 by 224 pixels. The convolutional baseline is EfficientNet-B3 [20] pretrained on ImageNet, with all but the final two stages frozen, yielding 9,299,683 trainable parameters of 11,489,837 total. The transformer is ViT-B/16 [13] pretrained on ImageNet-21k, with all but the final four transformer blocks unfrozen, yielding 28,651,781 trainable parameters of 86,097,413 total. Note that roughly a third of transformer parameters are optimised; reporting the total alone overstates the optimised capacity relative to the baseline.
 
 Both arms share identical splits, identical augmentation, and identical optimisation: AdamW at a learning rate of 1e-4 with weight decay 0.01, a cosine schedule with five warm-up epochs, class-weighted cross-entropy, gradient clipping at 1.0, and early stopping at patience eight. Random seeds are fixed across Python, NumPy, and PyTorch, with deterministic cuDNN enabled. Only the architecture varies between arms.
 
@@ -125,44 +125,56 @@ Defect 1 renders the originally reported five-class metrics uninterpretable. Def
 ### B. Baseline performance under a controlled protocol
 
 **TABLE II**
-*EfficientNet-B3, five-class, test set of 150 images (30 per class).*
+*Aggregate metrics, five-class, test set of 150 images (30 per class).*
 
-| Metric | Value |
-|---|---|
-| Accuracy | 0.8533 |
-| F1 (macro) | 0.8498 |
-| F1 (weighted) | 0.8498 |
-| AUC (macro) | 0.9732 |
-| Trainable parameters | 9,299,683 of 11,489,837 (80.9%) |
+| Metric | EfficientNet-B3 | ViT-B/16 |
+|---|---|---|
+| Epochs completed | 8 | 6 |
+| Accuracy | 0.8533 | 0.7000 |
+| F1 (macro) | 0.8498 | 0.6989 |
+| F1 (weighted) | 0.8498 | 0.6989 |
+| AUC (macro) | 0.9732 | 0.9592 |
+| Trainable parameters | 9,299,683 (80.9% of total) | 28,651,781 (33.3% of total) |
+| Total parameters | 11,489,837 | 86,097,413 |
 
 **TABLE III**
-*Per-class performance, EfficientNet-B3.*
+*Per-class performance, both architectures on the same 150-image test set.*
 
-| Class | Precision | Recall | F1 | Support |
-|---|---|---|---|---|
-| Non-Flooded | 0.667 | 0.800 | 0.727 | 30 |
-| Low Risk | 0.773 | 0.567 | 0.654 | 30 |
-| Medium Risk | 0.935 | 0.967 | 0.951 | 30 |
-| High Risk | 0.966 | 0.933 | 0.949 | 30 |
-| Flooded | 0.938 | 1.000 | 0.968 | 30 |
+| Class | P (CNN) | R (CNN) | F1 (CNN) | P (ViT) | R (ViT) | F1 (ViT) |
+|---|---|---|---|---|---|---|
+| Non-Flooded | 0.667 | 0.800 | 0.727 | 0.630 | 0.567 | 0.596 |
+| Low Risk | 0.773 | 0.567 | 0.654 | 0.583 | 0.700 | 0.636 |
+| Medium Risk | 0.935 | 0.967 | 0.951 | 0.585 | 0.800 | 0.676 |
+| High Risk | 0.966 | 0.933 | 0.949 | 0.938 | 0.500 | 0.652 |
+| Flooded | 0.938 | 1.000 | 0.968 | 0.933 | 0.933 | 0.933 |
+| **Accuracy** | | **0.8533** | | | **0.7000** | |
+| **F1 (macro)** | | **0.8498** | | | **0.6989** | |
 
-The aggregate metrics conceal structure worth examining. Performance separates into two groups. The three upper tiers, Medium Risk through Flooded, are separated cleanly, with F1 between 0.949 and 0.968 and recall at or above 0.933. The two lower tiers perform markedly worse, with F1 of 0.727 and 0.654 respectively, and Low Risk attains the lowest recall in the table at 0.567.
+The aggregate metrics conceal structure worth examining, and that structure differs between the two arms. Under the convolutional baseline, performance separates into two groups. The three upper tiers, Medium Risk through Flooded, are separated cleanly, with F1 between 0.949 and 0.968 and recall at or above 0.933. The two lower tiers perform markedly worse, with F1 of 0.727 and 0.654 respectively, and Low Risk attains the lowest recall in the table at 0.567.
 
 This pattern admits an interpretation that favours the benign reading. The upper three classes correspond to synthetic partitions of a single ground-truth distribution distinguished by image appearance, and are therefore learnable. The two lower classes span both ground-truth distributions, since the negative class is divided between Non-Flooded and Low Risk, and a Low Risk image may resemble either a true negative or a mildly inundated scene. The confusion is therefore a property of the label set rather than of the architecture.
 
-We note the alternative reading. Non-Flooded precision of 0.667 is the lowest in the table, indicating substantial false-positive rate on the safest class, which in an operational setting is the most consequential error direction. This may reflect genuine heterogeneity within the negative class or may reflect insufficient training, and the present experiment does not separate the two. Distinguishing them requires data with true severity annotation.
+The transformer arm does not reproduce this structure, and the discrepancy is the most consequential observation in this section. ViT-B/16 reaches a lower aggregate accuracy of 0.7000, but its per-tier profile is markedly flatter: F1 ranges from 0.596 to 0.933 with no clean grouping of the upper three tiers. Its lowest scores fall on the three lower and middle classes, at 0.596, 0.636, and 0.676, while High Risk, a member of the supposedly clean group, falls to 0.652 with recall of 0.500.
+
+Two readings are available and the present evidence does not adjudicate between them. Under the first, the convolutional baseline's two-group structure reflects the label set's own geometry, and the transformer simply has not converged tightly enough on that geometry to reproduce the grouping, being both lower in aggregate performance and trained for fewer epochs. Under the second, the two architectures learn different things, and the convolutional baseline's apparent tier structure reflects an inductive bias that exploits whatever image-level regularities the partition happens to encode. Distinguishing them requires matched training budgets and seed replication, neither of which is reported here.
+
+We note a further limitation of the convolutional arm specifically. Non-Flooded precision of 0.667 is the lowest in that column, indicating substantial false-positive rate on the safest class, which in an operational setting is the most consequential error direction. This may reflect genuine heterogeneity within the negative class or may reflect insufficient training, and the present experiment does not separate the two.
 
 ### C. Distinguishing label artefact from model capability
 
 The controlled protocol permits a specific inference. Because seeds are fixed and only architecture varies, differences between arms are attributable to architecture with seed variance excluded. Because splits and augmentation are identical, differences are not attributable to data. Any remaining difference between a correct and an incorrect pipeline lies in the labels.
 
-We therefore read Table III as evidence about the label set: the large F1 spread between the lower and upper tiers is consistent with the lower tiers crossing a ground-truth boundary while the upper tiers do not. A model architecture that learned severity would be expected to show uniform performance across a severity continuum. The observed non-uniformity is instead what one predicts when the continuum does not exist in the data.
+Table III therefore constrains what may be claimed in two ways, and in both it cuts against the intuitive reading of an architecture comparison.
 
-Two consequences follow. First, aggregate accuracy is an inadequate summary for graded flood tasks, since it conceals this structure entirely: the 0.8533 headline figure is compatible with per-tier F1 ranging from 0.654 to 0.968. Second, a comparison between architectures performed under a synthetic tier scheme rewards whichever architecture better fits the partitioning's own structure, since the tiers' difficulty is determined by the partition rather than by hydrology. Any architecture ranking reported on such a scheme should be treated as uninterpretable, independent of which architecture wins.
+First, aggregate accuracy is an inadequate summary for graded flood tasks. The 0.8533 headline is compatible with per-tier F1 ranging from 0.654 to 0.968 under one architecture, and with 0.596 to 0.933 under another. Neither figure tells the reader which tiers the model actually resolves.
+
+Second, and more pointedly, the 0.8533 against 0.7000 gap does not support the inference that convolutional networks are better suited to flood mapping than transformers. The two arms differ not only in architecture but in epochs completed, eight against six, since the transformer run was curtailed under a CPU time budget. An unmatched training budget converts an architecture comparison into a comparison of two training runs, and the difference in outcome is consistent with the transformer simply having had less optimisation applied. We report the gap and decline to attribute it.
+
+That is the general point this result illustrates. A comparison performed under a synthetic tier scheme rewards whichever architecture better fits the partitioning's own structure, since tier difficulty is fixed by the partition rather than by hydrology. Any architecture ranking reported on such a scheme should be treated as uninterpretable, independent of which architecture wins, and the present comparison is doubly uninterpretable because its training budgets are also unmatched.
 
 ### D. Attention localisation
 
-Pointing-game results are pending completion of the transformer arm and are not reported here. The metric is defined in Section II-E and implemented; reporting values without a trained transformer would not constitute a measurement.
+No pointing-game result is reported. The metric is defined in Section II-E, but its evaluation requires pixel-level ground-truth flood masks, and the imagery available to this work is procedurally generated without segmentation annotations. Reporting a value computed against synthetic masks would measure agreement with the generator's drawing routine rather than agreement with hydrology, so the measurement is withheld rather than approximated. This remains the paper's largest unfinished measurement and is the first thing we would complete with access to a segmented real dataset.
 
 ---
 
@@ -176,7 +188,7 @@ The practical implication is uncomfortable. A five-class result is more attracti
 
 ### B. Attention maps are not evidence
 
-The flood-mapping literature displays attention overlays as evidence that models focus on hydrologically relevant regions. Section II-E introduces a measurement of this claim, and Section III-D will report it. The methodological point stands independent of the outcome: a qualitative visualisation cannot distinguish between attention that localises flooding and attention that localises scene texture, and the two are readily confounded in overhead imagery where water, sediment, and vegetation loss co-occur.
+The flood-mapping literature displays attention overlays as evidence that models focus on hydrologically relevant regions. Section II-E introduces a measurement of this claim and Section III-D explains why we withhold it, the absence of pixel-level ground truth being a property of the available data rather than of the method. The methodological point stands regardless: a qualitative visualisation cannot distinguish between attention that localises flooding and attention that localises scene texture, and the two are readily confounded in overhead imagery where water, sediment, and vegetation loss co-occur.
 
 ### C. What graded flood risk actually requires
 
@@ -184,13 +196,19 @@ Genuine severity tiers require variables that ground truth does not contain. Pla
 
 ### D. Threats to validity
 
-Four limitations bound these results. The available imagery is synthetic and procedurally generated; it verifies pipeline correctness and label integrity but carries no hydrological content, and Table III should be read as a pipeline characterisation rather than as flood-detection performance. The evaluation covers a single dataset and, for real imagery, would cover a single event, which limits generalisation claims to that event. Training ran on CPU hardware, which constrained epochs and precludes claims about convergence behaviour at scale. Attention localisation is specified and implemented but unreported. Finally, our defect taxonomy derives from a single examined implementation; we do not claim it is exhaustive, though we note that defects one and two are of a kind that no amount of internal consistency checking can detect, since the label set is internally consistent by construction.
+Five limitations bound these results, and the first two are severe enough that they constrain what the paper can be said to demonstrate.
+
+The available imagery is synthetic and procedurally generated. It verifies pipeline correctness and label integrity but carries no hydrological content. Tables II and III should therefore be read as a pipeline characterisation, not as flood-detection performance, and no number in this paper should be cited as evidence about how well either architecture maps flooding.
+
+The two architecture arms are not training-budget matched. The convolutional baseline completed eight epochs and the transformer six, because CPU-only execution constrained the run time available. The 0.8533 against 0.7000 comparison in Section III-B is consequently confounded and we decline to attribute it to architecture. Matched budgets and at least three seeds per arm would be required, and this is the first experiment we would run with additional compute.
+
+Beyond these, the evaluation covers a single dataset, and with real imagery would cover a single event, limiting generalisation to that event. Attention localisation is specified but unreported, for want of pixel-level ground truth. Finally, the defect taxonomy derives from a single examined implementation and we do not claim it is exhaustive, though we note that defects one and two are of a kind that no amount of internal consistency checking can detect, since the label set is internally consistent by construction.
 
 ---
 
 ## V. CONCLUSION
 
-We have argued that label provenance must be audited before flood-mapping metrics are reported, and that in at least one widely applied pipeline pattern the audit fails in a way invisible to internal consistency checks. Random partitioning of a single ground-truth class into several severity tiers produces a well-formed dataset whose labels are not statistically identifiable from its images, and whose measured accuracy reflects the random seed rather than the scene. Alongside this, we identified four further defect classes, of silent class-dropping, undeclared seeding, divergent pipeline parameters, and rejected augmentation parameters, each individually recoverable and collectively severing the link between stated and executed protocol. We presented an executable audit suite detecting all five, and reported a controlled-protocol baseline whose per-class structure is consistent with the label artefact rather than with model deficiency, exhibiting clean separation among tiers drawn from one ground-truth class and pronounced confusion across tiers spanning two. Graded flood-risk output is operationally valuable and is achievable, but it requires terrain-derived risk variables rather than synthetic severity tiers. Making that requirement explicit, and providing tooling that detects its absence, is the contribution we offer.
+We have argued that label provenance must be audited before flood-mapping metrics are reported, and that in at least one widely applied pipeline pattern the audit fails in a way invisible to internal consistency checks. Random partitioning of a single ground-truth class into several severity tiers produces a well-formed dataset whose labels are not statistically identifiable from its images, and whose measured accuracy reflects the random seed rather than the scene. Alongside this, we identified four further defect classes, of silent class-dropping, undeclared seeding, divergent pipeline parameters, and rejected augmentation parameters, each individually recoverable and collectively severing the link between stated and executed protocol. We presented an executable audit suite detecting all five, and reported measurements from two architectures under a controlled protocol. Within a single architecture, per-tier performance varied by a factor of three while the aggregate accuracy figure remained unchanged, which shows that headline accuracy conceals rather than summarises tier behaviour. Across the two arms, the per-tier profiles differed in shape rather than only in level, and the accuracy gap between them is confounded by an unmatched training budget, so we decline to attribute it to architecture; on a synthetic tier scheme the ranking would be uninterpretable even if the budgets were matched. Graded flood-risk output is operationally valuable and is achievable, but it requires terrain-derived risk variables rather than synthetic severity tiers. Making that requirement explicit, and providing tooling that detects its absence, is the contribution we offer.
 
 ---
 
@@ -223,42 +241,44 @@ the claim they are attached to.
 
 [8] N. Notarangelo, C. Wirion, and F. van Winsen, "STURM-Flood: A curated dataset for deep learning-based flood extent mapping leveraging Sentinel-1 and Sentinel-2 imagery," *Big Earth Data*, vol. 9, pp. 412–438, 2025, doi: 10.1080/20964471.2025.2458714.
 
-[9] <!-- VERIFY: the BinaLab FloodNet v1.0 dataset. The primary citation is a 2019
-     IEEE Int. Symp. Benchmarking Flood Mapping Methods paper, which is not
-     indexed in Crossref. Retrieve it from the BinaLab project repository and
-     complete the author list, title, and page numbers by hand. -->
+[9] M. Rahnemoonfar, T. Chowdhury, A. Sarkar, D. Varshney, M. Yari, and R. R. Murphy, "FloodNet: A high resolution aerial imagery dataset for post flood scene understanding," *IEEE Access*, vol. 9, pp. 89644–89654, 2021, doi: 10.1109/ACCESS.2021.3090981.
 
-[10] <!-- VERIFY: the SEN12-FLOOD dataset paper (Bazi et al.). Not indexed in
-     Crossref under the title variants tried. Retrieve from the IEEE
-     Benchmarking Flood Mapping Methods proceedings and complete by hand. -->
+[10] M. Wieland, F. Fichtner, S. Martinis, S. Groth, C. Krullikowski, S. Plank, and M. Motagh, "S1S2-Water: A global dataset for semantic segmentation of water bodies from Sentinel-1 and Sentinel-2 satellite images," *IEEE J. Sel. Top. Appl. Earth Observ. Remote Sens.*, vol. 17, pp. 1084–1099, 2023, doi: 10.1109/JSTARS.2023.3333969.
 
-[11] O. Ronneberger, P. Fischer, and T. Brox, "U-Net: Convolutional networks for biomedical image segmentation," in *Proc. Int. Conf. Comput. Assist. Interv.*, 2015, pp. 234–241, doi: 10.1007/978-3-319-24574-4_28.
+[11] <!-- VERIFY: the SEN12-FLOOD dataset paper (Bazi et al.). Not indexed in
+     Crossref, OpenAlex, DBLP, Semantic Scholar, or arXiv under the title
+     variants tried. Retrieve from the IEEE Benchmarking Flood Mapping Methods
+     proceedings and complete the author list, title, and pages by hand. -->
 
-[12] A. Dosovitskiy, et al., "An image is worth 16x16 words: Transformers for image recognition at scale," in *Proc. Int. Conf. Learn. Represent.*, 2020.
+[12] O. Ronneberger, P. Fischer, and T. Brox, "U-Net: Convolutional networks for biomedical image segmentation," in *Proc. Int. Conf. Comput. Assist. Interv.*, 2015, pp. 234–241, doi: 10.1007/978-3-319-24574-4_28.
 
-[13] Z. Liu, et al., "Swin transformer: Hierarchical vision transformer using shifted windows," in *Proc. IEEE/CVF Int. Conf. Comput. Vis.*, 2021, pp. 10012–10022.
+[13] A. Dosovitskiy, et al., "An image is worth 16x16 words: Transformers for image recognition at scale," in *Proc. Int. Conf. Learn. Represent.*, 2020.
 
-[14] R. Geirhos, J.-H. Jacobsen, C. Michaelis, R. Zemel, W. Brendel, M. Bethge, and F. A. Wichmann, "Shortcut learning in deep neural networks," *Nature Machine Intelligence*, vol. 2, no. 11, pp. 665–673, 2020, doi: 10.1038/s42256-020-00257-z.
+[14] Z. Liu, et al., "Swin transformer: Hierarchical vision transformer using shifted windows," in *Proc. IEEE/CVF Int. Conf. Comput. Vis.*, 2021, pp. 10012–10022.
 
-[15] A. G. Northcutt, A. Athalye, and R. Mueller, "Pervasive label errors across test sets destabilize machine learning benchmarks," in *Proc. NeurIPS*, 2021, pp. 16323–16344.
+[15] R. Geirhos, J.-H. Jacobsen, C. Michaelis, R. Zemel, W. Brendel, M. Bethge, and F. A. Wichmann, "Shortcut learning in deep neural networks," *Nature Machine Intelligence*, vol. 2, no. 11, pp. 665–673, 2020, doi: 10.1038/s42256-020-00257-z.
 
-[16] <!-- VERIFY: M. Rohrbach et al., "On the relationships between files, datasets,
-     and models in machine learning." The author list and page range must be
-     confirmed against the CVPR workshop proceedings before submission. -->
+[16] A. G. Northcutt, A. Athalye, and R. Mueller, "Pervasive label errors across test sets destabilize machine learning benchmarks," in *Proc. NeurIPS*, 2021, pp. 16323–16344.
 
-[17] R. R. Selvaraju, et al., "Grad-CAM: Visual explanations from deep networks via gradient-based localization," in *Proc. IEEE Int. Conf. Comput. Vis.*, 2017, pp. 618–626, doi: 10.1109/ICCV.2017.74.
+[17] E. M. Bender and B. Friedman, "Data statements for natural language processing: Toward mitigating system bias and enabling better science," *Trans. Assoc. Comput. Linguistics*, vol. 6, pp. 587–604, 2018, doi: 10.1162/tacl_a_00041.
 
-[18] A. Abnar and T. Zuidema, "Quantifying attention flow in transformers," in *Proc. Annu. Meeting Assoc. Comput. Linguistics*, 2020, pp. 1639–1647, doi: 10.18653/v1/2020.acl-main.156.
+[18] R. R. Selvaraju, et al., "Grad-CAM: Visual explanations from deep networks via gradient-based localization," in *Proc. IEEE Int. Conf. Comput. Vis.*, 2017, pp. 618–626, doi: 10.1109/ICCV.2017.74.
 
-[19] M. Tan and Q. V. Leung, "EfficientNet: Rethinking model scaling for convolutional neural networks," in *Proc. IEEE/CVF Conf. Comput. Vis. Pattern Recognit.*, 2019, pp. 6105–6114, doi: 10.1109/CVPR.2019.00140.
+[19] A. Abnar and T. Zuidema, "Quantifying attention flow in transformers," in *Proc. Annu. Meeting Assoc. Comput. Linguistics*, 2020, pp. 1639–1647, doi: 10.18653/v1/2020.acl-main.156.
+
+[20] M. Tan and Q. V. Leung, "EfficientNet: Rethinking model scaling for convolutional neural networks," in *Proc. IEEE/CVF Conf. Comput. Vis. Pattern Recognit.*, 2019, pp. 6105–6114, doi: 10.1109/CVPR.2019.00140.
 
 <!--
 Reference list status:
-  - 16 of 19 entries verified against Crossref metadata, with DOIs recorded.
-  - [9], [10], [16] require manual retrieval. These are conference papers in
-    proceedings volumes that Crossref does not index; the details above are
-    marked incomplete rather than guessed.
-  - IEEE Access typically expects 25-35 references. The list stands at 19
+  - 19 of 20 entries verified against Crossref or OpenAlex metadata, with DOIs
+    recorded. Crossref, OpenAlex, DBLP, Semantic Scholar, and arXiv were all
+    queried while assembling this list.
+  - [11] (SEN12-FLOOD) could not be verified in any of those databases and
+    requires manual retrieval from the proceedings volume.
+  - [13], [14], [16], [18] are venue papers whose author lists use "et al.";
+    confirm against the IEEE Reference Guide, which permits "et al." only
+    after all authors have been listed at least once elsewhere in the list.
+  - IEEE Access typically expects 25-35 references. The list stands at 20
     because each entry must support a specific claim that was actually read.
     Add further references only where a claim requires them.
   - Every entry must be read before submission. Padding this list is a breach
