@@ -1,6 +1,6 @@
 # Are Flood Risk Classifiers Measuring What They Are Trained On? Label Provenance in Vision-Transformer Flood Mapping
 
-**Varshini D. N.*, Maanya B. S., and Aishwarya S.**
+**Varshini D. N.\*, Maanya B. S., and Aishwarya S.**
 
 *Department of Computer Science and Engineering, Jyothy Institute of Technology, Bengaluru 560082, India*
 
