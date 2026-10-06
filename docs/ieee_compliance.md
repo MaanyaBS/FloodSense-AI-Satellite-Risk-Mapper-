@@ -81,13 +81,21 @@ draft does not attempt. Confirm the exact wording IEEE expects before submitting
 
 | Author | Status |
 |---|---|
-| Varshini D. N. | **placeholder** — degree, institution, year, role needed |
-| Maanya B. S. | **placeholder** — same |
-| Aishwarya S. | **placeholder** — same |
+| Varshini D. N. | ✅ supplied 2026-10-06 |
+| Maanya B. S. | ✅ supplied 2026-10-06 |
+| Aishwarya S. | ✅ supplied 2026-10-06 |
 
-Rendered as `\begin{IEEEbiographynophoto}` (no photo on file). The PDF currently
-shows `BIOGRAPHY REQUIRED -- degree(s), ...` for each. **This must not be
-submitted as-is.**
+Rendered as `\begin{IEEEbiographynophoto}` (no photo on file). All three are
+final-year undergraduates (2023–2027), so the degree is written as in progress
+(`is currently working toward`) rather than conferred (`received`).
+
+⚠️ **Degree letters need confirmation.** The authors gave `B.E.` for the first
+author and `B.Tech.` for the other two. Written as **B.E.** for all three, on
+the basis that Jyothy Institute of Technology is VTU-affiliated and VTU awards
+B.E. Confirm or correct.
+
+⚠️ IEEE bios usually end with a research-interests sentence. None was supplied,
+so none was invented. Add one if wanted.
 
 ---
 
@@ -136,18 +144,33 @@ and `bullet.png` for its own chrome — **do not delete them from `docs/paper/`*
 
 ## Blockers before submission
 
-1. **Author biographies** — need real credentials for all three authors. ❌
-2. **DOI placeholder** — replace `10.1109/ACCESS.XXXXXXX` per the portal. ❌
-3. **Prior-publication statement** — unconfirmed by the authors. ❌
-4. **Co-author approval** — Maanya and Aishwarya must read and approve; author
-   order to be settled with them. ❌
-5. **ORCID ID** — submitting author, publicly visible. ❌
+1. **Prior-publication statement** — ✅ **confirmed by author 2026-10-06**:
+   "I haven't publish this paper anywhere." Statement stands as written.
+2. **Author order** — ✅ **settled 2026-10-06**: Varshini → Maanya → Aishwarya,
+   Varshini first position (developed the paper). All three authors still must
+   approve the final PDF.
+3. **Author biographies** — ✅ **supplied 2026-10-06**, all three written in.
+   ⚠️ Degree letters (B.E. vs B.Tech.) need confirmation.
+4. **DOI placeholder** — replace `10.1109/ACCESS.XXXXXXX` per the portal. ❌
+5. **ORCID ID** — submitting author, publicly visible. ❌ **still outstanding**
 6. **Word version** — a Word file is required alongside the PDF, matching
-   exactly. ❌
-7. **AI disclosure wording** — confirm IEEE's expected form. ⚠️
-8. **Reference expansion** — refs `[12] [13] [15] [17]` should list full
+   exactly. ❌ **not built yet**
+7. **Concurrent submission / posting elsewhere** — ⚠️ **needs clarification.**
+   The authors said the paper will be published "in some other web." IEEE
+   states: *"The article should not be submitted elsewhere at the same time."*
+   Posting a preprint (arXiv, ResearchGate) is generally tolerated, but
+   simultaneous submission to another venue, or posting this IEEE-formatted
+   version as the published copy elsewhere, is a duplicate-submission problem
+   and can result in rejection. Clarify before submitting.
+8. **AI disclosure wording** — confirm IEEE's expected form. ⚠️
+9. **Reference expansion** — refs `[12] [13] [15] [17]` should list full
    author lists. ⚠️
-9. **Real imagery** — synthetic data cannot support a flood-mapping claim;
-   FloodNet (real, cited at `[9]`) would also supply pixel masks. ⚠️
-10. **Seed variance** — ≥ 3 seeds per architecture before any comparative claim.
-    ⚠️
+10. **Author photographs** — optional; would upgrade `IEEEbiographynophoto` to
+    `IEEEbiography`. ⚠️
+11. **Real imagery** — synthetic data cannot support a flood-mapping claim;
+    FloodNet (real, cited at `[9]`) would also supply pixel masks. ⚠️
+12. **Seed variance** — ≥ 3 seeds per architecture before any comparative
+    claim. ⚠️
+13. **Figures** — none present; `outputs/plots/` has confusion matrices and
+    training curves if wanted. ⚠️
+14. **Grammar proofread** — IEEE rejects poor grammar outright. ⚠️
