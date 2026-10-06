@@ -2,10 +2,11 @@
 
 **Varshini D. N.\*, Maanya B. S., and Aishwarya S.**
 
-*Department of Computer Science and Engineering, Jyothy Institute of Technology, Bengaluru 560082, India*
+*Department of Artificial Intelligence and Machine Learning, Jyothy Institute of Technology, Bengaluru 560082, India*
 
-<!-- CONFIRM: the department name above is inferred. If the department has a
-     different official name, replace it here and in footnote paragraph 2. -->
+<!-- CONFIRMED by the corresponding author: the department is Artificial
+     Intelligence and Machine Learning. Previously this read "Computer Science
+     and Engineering", which was an inference and is now corrected. -->
 
 > Manuscript received DATE; revised DATE; accepted DATE.
 > **Digital Object Identifier** DOI.
@@ -14,12 +15,10 @@
 > grant from any funding agency in the public, commercial, or not-for-profit
 > sectors.
 >
-> 2) The authors are with the Department of Computer Science and Engineering,
-> Jyothy Institute of Technology, Pipeline Road, Tatguni, Bengaluru 560082,
-> India. Corresponding author: Varshini D. N.
-> <!-- PENDING FROM AUTHOR: the corresponding author's e-mail address. IEEE
-     requires it in this paragraph. A placeholder must not survive into a
-     submitted manuscript. -->
+> 2) The authors are with the Department of Artificial Intelligence and Machine
+> Learning, Jyothy Institute of Technology, Pipeline Road, Tatguni, Bengaluru
+> 560082, India. Corresponding author: Varshini D. N.
+> email: varshinidn13@gmail.com.
 >
 > 3) No part of this work has been previously published or is under concurrent
 > consideration elsewhere.
