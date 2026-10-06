@@ -1,195 +1,153 @@
-# IEEE Authoring Compliance Checklist
+# IEEE Access Compliance Checklist — FloodSense
 
-Applies to the FloodSense paper. Sourced from the IEEE Author Center:
-Structure Your Article, IEEE Editorial Style Manual for Authors, IEEE
-Reference Guide, and IEEE Math Typesetting Guide.
+Sourced from the **official IEEE Access author guidance** at
+<https://ieeeaccess.ieee.org/authors/submission-guidelines/> and from the
+**official IEEE Access LaTeX template** (`ACCESS_latex_template_20260513`),
+downloaded directly from that page. Items verified against the rendered PDF are
+marked ✅.
 
----
-
-## 1. Required section order (mandatory)
-
-IEEE prescribes this sequence. Sections may not be reordered or renamed.
-
-| # | Section | Status |
-|---|---------|--------|
-| 1 | Title | drafted |
-| 2 | Authors | **blocked** — needs real affiliation |
-| 3 | Abstract | drafted |
-| 4 | Keywords | drafted |
-| 5 | First footnote | **blocked** — needs funding + prior-publication statements |
-| 6 | I. Introduction | drafted |
-| 7 | II. Methodology | drafted |
-| 8 | III. Results | **blocked** — no measurements |
-| 9 | IV. Discussion | drafted (interim) |
-| 10 | V. Conclusion | drafted |
-| 11 | References | drafted |
-| 12 | Acknowledgments | optional |
-
-**Correction from the earlier outline:** there is no standalone "Related
-Work" section in the IEEE structure. The literature review is folded into
-the Introduction, per IEEE guidance that the introduction "includes a review
-of the existing literature to position your research within the broader
-scientific field and to show the novelty of your work."
-
-Use Roman numerals for section headings. Subsections use letters
-(A, B, C). IEEE Access uses Arabic numerals for headings, not Roman —
-confirm against the target template.
+> **Superseded guidance:** an earlier revision of this file listed a generic
+> IEEE Transactions-style first footnote (three paragraphs, affiliation inside
+> the footnote, no DOI, no biographies). That is **not** IEEE Access practice and
+> has been replaced below.
 
 ---
 
-## 2. Title
+## 0. Template and class
 
-- Specific, concise, descriptive
-- Keywords and short phrases, as few words as possible
-- **Must NOT contain "new" or "novel"** — reader already assumes novelty
-- **Must NOT contain mathematical symbols** (may not render)
+| Item | Requirement | Status |
+|---|---|---|
+| Template file | "prepared in a double column, single-spaced format using a **required IEEE Access template**" | ✅ `\documentclass{ieeeaccess}` |
+| Source | `ACCESS_latex_template_20260513` (from the official page) | ✅ bundled in `docs/paper/` |
+| Files submitted | **Word file and a PDF**, content must match exactly, ≤ 40 MB | ⚠️ PDF ✅ / Word **missing** |
+| Manuscript type | "Research Article" | action at submission |
+| ORCID | submitting author must have a **publicly visible, populated ORCID ID** | **blocked — need user** |
+| Language | poor grammar is rejected outright | proofread |
 
----
+The class lives in `docs/paper/` alongside `ieeeaccess.cls`, `spotcolor.sty`,
+`IEEEtran.cls`, `IEEEtran.bst` and the bundled `t1-formata-*` / `giovannistd`
+fonts. It must be compiled from that directory.
 
-## 3. Abstract
-
-- **Single paragraph**
-- **250 words maximum**
-- **Self-contained:** no abbreviations, no citations, no footnotes, no equations
-- States research conducted, conclusions reached, and implications
-- Highlights what is novel
-- **No mathematical symbols** in title or abstract
-
----
-
-## 4. Keywords
-
-- 3–5 terms or phrases
-- Define all abbreviations
-- Prefer standardized terms — use the IEEE Thesaurus (free access via IEEE)
-- Applies the abbreviation consistently thereafter
+**Never substitute** `\documentclass[11pt,journal]{IEEEtran}`. That was the
+original error in this project: IEEE Access ships its own class, and the 11pt
+journal option is not it.
 
 ---
 
-## 5. First footnote (unnumbered, ≥3 paragraphs, exact order)
+## 1. Front matter — all verified in the rendered PDF ✅
 
-**Paragraph 1** — all of:
-- Full financial support / funding (also NOT in Acknowledgments)
-- Prior conference presentation of this or related work, with the DOI of the
-  conference version (not a preprint)
-- Corresponding author name and email
-- **If part of a thesis or dissertation, state it in the last sentence**
-- If research involves human subjects or animals: a required review-board
-  statement. Not applicable here.
+| Element | Requirement | Status |
+|---|---|---|
+| Title | no "new"/"novel", no math symbols | ✅ |
+| Authors | `\author{...}` + `\authorrefmark{n}` | ✅ three names, verbatim |
+| Affiliation | `\address[n]{...}` — dept, institution, road, locality, city, **country** | ✅ |
+| Corresponding | `\corresp{Corresponding author: ... (e-mail: ...)}` | ✅ |
+| Funding | in the first-page `\tfootnote`, **not** in Acknowledgment | ✅ no-specific-grant statement |
+| Prior publication | first-page footnote | ✅ present, **still unconfirmed by authors** |
+| Abstract | single paragraph, ≤ 250 words, no citations/equations | ✅ **220 words, 1 paragraph** |
+| Keywords | `\begin{keywords}`, alphabetical, **3–10** | ✅ **7 terms, alphabetical** |
+| `\history` | publication-date line | ✅ template placeholder |
+| `\doi` | **mandatory** — `\maketitle` dereferences `\@doi` | ⚠️ fake placeholder `10.1109/ACCESS.XXXXXXX` |
+| `\EOD` | **mandatory** after last biography | ✅ |
+| Running head | first author + `et al.` | ✅ `Varshini et al.: ...` |
 
-**Paragraph 2** — affiliations for each author:
-department, university/corporation, city, state/province, postal code,
-country. Country and corresponding author email are mandatory.
+**Section order:** I. Introduction, II. Methodology, III. Results, IV. Discussion,
+V. Conclusion, Acknowledgment, References, Biographies. ✅ No separate Related
+Work section — literature is folded into the Introduction.
 
-**Paragraph 3** — IEEE notice on supplementary materials and color figures.
-
-All subsequent footnotes are numbered consecutively. **Do not use asterisks
-or daggers.**
-
----
-
-## 6. Introduction
-
-Per IEEE: must include the literature review, position the work in the field,
-show novelty, state the research question, and explain why it matters.
+Section headings use **Roman numerals** (this class numbers them that way), and
+table captions use **Arabic** (`TABLE 1`). Both are automatic.
 
 ---
 
-## 7. Methodology
+## 2. Acknowledgment — AI disclosure (new, mandatory)
 
-Per IEEE: "A detailed methodology section will make your article
-reproducible by other researchers." Must state what was done and how.
+> "The use of artificial intelligence (AI)-generated text in an article shall be
+> disclosed in the acknowledgements section. The sections of the paper that use
+> AI-generated text shall have a citation to the AI system used to generate the
+> text."
 
----
+Present in `docs/paper/paper.tex` as an unnumbered `\section*{Acknowledgment}` ✅.
 
-## 8. Results
-
-Figures for trends and visual information. **Tables where exact values
-matter.**
-
----
-
-## 9. Discussion
-
-Per IEEE: what the results mean and how they contribute to the field.
+⚠️ **The guidance asks for a per-section citation to the AI system**, which our
+draft does not attempt. Confirm the exact wording IEEE expects before submitting.
 
 ---
 
-## 10. Conclusion
+## 3. Biographies — required, currently BLOCKED
 
-Per IEEE: "Be careful not to inflate your findings." May note broader
-implications and areas needing further study.
+> "Short biographies are required for **ALL** authors ... directly within the
+> article **below the references section**."
 
----
+| Author | Status |
+|---|---|
+| Varshini D. N. | **placeholder** — degree, institution, year, role needed |
+| Maanya B. S. | **placeholder** — same |
+| Aishwarya S. | **placeholder** — same |
 
-## 11. References
-
-IEEE numeric style, in order of citation. Format via the IEEE Reference
-Preparation Assistant (refassist.ieee.org).
-
-**Ethics rule (verbatim from IEEE):** *"Be sure to only cite references that
-directly support your work. Inflating citations by adding unnecessary
-references is considered a breach of publishing ethics."*
-
-Rules:
-- Numbered in order of first appearance in text
-- Journal titles in full on first use, IEEE-abbreviated thereafter — use the
-  official IEEE journal title list
-- Author names as initials: A. B. Surname
-- "et al." for 3+ authors (IEEE style uses all three then et al. for 4+ —
-  verify against the Reference Guide)
-- Include DOIs where available
-- Target 25–35
+Rendered as `\begin{IEEEbiographynophoto}` (no photo on file). The PDF currently
+shows `BIOGRAPHY REQUIRED -- degree(s), ...` for each. **This must not be
+submitted as-is.**
 
 ---
 
-## 12. Graphics
+## 4. Results and claims
 
-From IEEE graphics guidance:
+- 34 audit checks pass (18 label/provenance + 16 pipeline contract) ✅
+- CNN (EfficientNet-B3): acc 0.8533, F1-macro 0.8498, AUC 0.9732 ✅
+- ViT-B/16: acc 0.7000, F1-macro 0.6989, AUC 0.9592 ✅
+- Per-tier F1 spread: CNN 0.654–0.968, ViT 0.596–0.933 ✅
+- **No architecture ranking is claimed** — 8 vs 6 epochs is unmatched ✅
+- Tables II/III (now `TABLE 3`/`TABLE 4`) are pipeline characterisation on
+  **synthetic** data, not flood-detection performance ✅ stated explicitly
+- No pointing-game number reported (no pixel ground truth) ✅
+
+---
+
+## 5. References
+
+- 19 references, `[1]`–`[19]`, contiguous, none undefined, none uncited ✅
+- All 15 DOIs fetched and confirmed ✅
+- Cite only what was actually read — "Inflating citations by adding unnecessary
+  references is considered a breach of publishing ethics."
+
+⚠️ IEEE permits `et al.` abbreviation only when the source has more than six
+authors **or** the list is unreasonably long. Refs `[12] [13] [15] [17]` use
+`et al.` and should be expanded to the full list.
+
+---
+
+## 6. Graphics
 
 | Property | Requirement |
-|----------|-------------|
-| Resolution | 300 dpi for halftone; 600 dpi for line art |
+|---|---|
+| Resolution | 300 dpi halftone, 600 dpi line art |
 | Color space | RGB |
-| Format | PDF, EPS, TIFF (not JPEG for figures) |
-| Vector preferred | for line art and diagrams |
-| Fonts | embed; use 8–10 pt at final size |
-| Text in figures | must be legible at print size, same font family as body |
-| Captions | below figures, above tables |
-| Table captions | sentence case, ending in a period |
+| Format | PDF, EPS, TIFF (**not JPEG for figures**) |
+| Fonts | embedded, 8–10 pt at final size |
+| Captions | below figures, **above tables** |
 | Alt text | required for accessibility |
 
----
-
-## 13. Language and style
-
-- Active voice, present tense for what the paper does, past tense for what was done
-- Merriam-Webster for spelling
-- Chicago Manual of Style for grammar not covered by IEEE's manual
-- Define every abbreviation at first use in the body text (not just the abstract)
-- Spell out units; use SI units
-- Numbers: spell out zero through nine unless used as measurements or in equations
-
----
-
-## 14. Ethics and authorship
-
-- Must meet IEEE authorship criteria (substantial contribution, drafting or
-  revision, final approval). Sole authorship is acceptable for a sole
-  contributor's work.
-- Prior publication must be disclosed with DOI
-- Funding must be disclosed in the first footnote
-- Corrected papers and retractions follow defined procedures — not applicable here
+⚠️ The paper currently has **no figures**. Confusion matrices and training plots
+exist in `outputs/plots/`. The class requires `logo.png`, `notaglinelogo.png`
+and `bullet.png` for its own chrome — **do not delete them from `docs/paper/`**.
 
 ---
 
 ## Blockers before submission
 
-1. **Real affiliation** — department, university, city, state, postal code, country, email
-2. **Prior-publication statement** — is this part of an existing thesis or project report?
-3. **Funding statement** — was any part funded? If not, state that.
-4. **Results section** — CNN run in progress; ViT not started. Synthetic demo
-   data cannot support a flood-mapping claim.
-5. **Real imagery** — FloodNet or SEN12-FLOOD required
-6. **Seed variance** — ≥3 seeds per architecture to support a controlled-protocol claim
-7. **Ground-truth masks** — required for the attention-localisation metric
+1. **Author biographies** — need real credentials for all three authors. ❌
+2. **DOI placeholder** — replace `10.1109/ACCESS.XXXXXXX` per the portal. ❌
+3. **Prior-publication statement** — unconfirmed by the authors. ❌
+4. **Co-author approval** — Maanya and Aishwarya must read and approve; author
+   order to be settled with them. ❌
+5. **ORCID ID** — submitting author, publicly visible. ❌
+6. **Word version** — a Word file is required alongside the PDF, matching
+   exactly. ❌
+7. **AI disclosure wording** — confirm IEEE's expected form. ⚠️
+8. **Reference expansion** — refs `[12] [13] [15] [17]` should list full
+   author lists. ⚠️
+9. **Real imagery** — synthetic data cannot support a flood-mapping claim;
+   FloodNet (real, cited at `[9]`) would also supply pixel masks. ⚠️
+10. **Seed variance** — ≥ 3 seeds per architecture before any comparative claim.
+    ⚠️

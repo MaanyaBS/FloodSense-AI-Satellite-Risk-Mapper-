@@ -1,36 +1,101 @@
-% IEEE Access submission. Verified against IEEE Access author instructions:
-%   - mandatory section order, no separate Related Work
-%   - abstract: single paragraph, <=250 words, no citations, no equations
-%   - Index Terms present
-%   - figures 300 dpi colour / 600 dpi line art
-% Confirm the class options against the official IEEE-access-template.tex when
-% you can download it from the IEEE Author Center; this file was written
-% without network access to that template.
-\documentclass[11pt,journal]{IEEEtran}
-\usepackage[utf8]{inputenc}
-\usepackage[T1]{fontenc}
-\usepackage{graphicx}   % figures
-\usepackage{booktabs}   % \toprule \midrule \bottomrule \cmidrule in Tables I-III
-\usepackage{listings}   % Listing 1, the re-split pseudocode
-% NOTE: the 'balance' package is deliberately absent. It is not carried by the
-% MiKTeX repository (which offers only the unrelated 'pbalance'), and it is
-% cosmetic: it evens out the two columns on the final page. Without it the
-% references end ragged at the bottom of the last column, which IEEE permits.
+%% IEEE Access submission.
+%% Built against the OFFICIAL IEEE Access LaTeX template
+%% (ACCESS_latex_template_20260513), which ships its own class:
+%%     \documentclass{ieeeaccess}
+%% Do not replace this with \documentclass[11pt,journal]{IEEEtran} -- that was
+%% wrong and produced a paper IEEE would not accept as-is. This file sits in the
+%% same directory as ieeeaccess.cls, spotcolor.sty, IEEEtran.cls, IEEEtran.bst and
+%% the bundled t1-formata-* font files, and MUST be compiled from that directory.
+%%
+%% Compliance notes verified against https://ieeeaccess.ieee.org/authors/submission-guidelines/ :
+%%   - "prepared in a double column, single-spaced format using a required
+%%     IEEE Access template"  -> satisfied by ieeeaccess.cls
+%%   - abstract single paragraph, no citations, no equations
+%%   - Index Terms in \begin{keywords}, alphabetical, 3-10 (7 supplied)
+%%   - biography required for EVERY author, below the references
+%%   - corresponding author designated via \corresp
+%%   - funding/support statement in the first-page footnote via \tfootnote
+%%   - AI-generated-text disclosure in the Acknowledgment
+%%   - \doi is MANDATORY: \maketitle dereferences \@doi and omitting it raises
+%%     "Undefined control sequence \@doi". IEEE assigns the real DOI at
+%%     publication, so the value used below is a deliberately obvious
+%%     non-real placeholder. >>> Replace or clear it per the submission portal.
+%%   - \EOD is MANDATORY after the last biography; the class raises a class error
+%%     without it.
+%%   - \history uses the template's own publication-date placeholder, unmodified.
+\documentclass{ieeeaccess}
 
-% IEEE Access uses the IEEEtran journal class. This file follows the
-% mandatory section order: Introduction, Methodology, Results, Discussion,
-% Conclusion. There is no Related Work section; literature is folded into
-% subsections of the Introduction, as IEEE requires.
+%% --- preamble, as specified by the official template ---
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{bm}
+
+%% --- additions required by this manuscript ---
+\usepackage{booktabs}   % \toprule \midrule \bottomrule \cmidrule in Tables I-III
+%% The 'listings' package is deliberately NOT used. It clashes with graphicx
+%% inside this class ("Argument of \Gin@iii has an extra }"), and graphicx is
+%% loaded by ieeeaccess.cls itself for \EOD's bullet.png. Listing 1 is instead
+%% set as a plain tabular in typewriter type, which needs no extra package and
+%% matches IEEE's own pseudocode style.
+
+%% The 'balance' package is deliberately absent. It is not carried by the
+%% MiKTeX repository (which offers only the unrelated 'pbalance'), and it is
+%% cosmetic: it evens the two columns on the final page. Without it the
+%% references end ragged at the foot of the last column, which IEEE permits.
+
+\makeatletter
+\AtBeginDocument{\DeclareMathVersion{bold}
+\SetSymbolFont{operators}{bold}{T1}{times}{b}{n}
+\SetSymbolFont{NewLetters}{bold}{T1}{times}{b}{it}
+\SetMathAlphabet{\mathrm}{bold}{T1}{times}{b}{n}
+\SetMathAlphabet{\mathit}{bold}{T1}{times}{b}{it}
+\SetMathAlphabet{\mathbf}{bold}{T1}{times}{b}{n}
+\SetMathAlphabet{\mathtt}{bold}{OT1}{pcr}{b}{n}
+\SetSymbolFont{symbols}{bold}{OMS}{cmsy}{b}{n}
+\renewcommand\boldmath{\@nomath\boldmath\mathversion{bold}}}
+\makeatother
+
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+
+%% The class defines \tfootnote via \gdef, which makes it a SHORT macro, so a
+%% \par inside it raises "Paragraph ended before \tfootnote was complete".
+%% The first-page footnote legitimately needs two paragraphs (funding, then prior
+%% publication), so redefine it as a long macro. This changes nothing else.
+\makeatletter
+\long\def\tfootnote#1{\gdef\@tfootnote{#1}}
+\makeatother
 
 \begin{document}
+
+\history{Date of publication xxxx 00, 0000, date of current version xxxx 00, 0000.}
+\doi{10.1109/ACCESS.XXXXXXX}
 
 \title{Are Flood Risk Classifiers Measuring What They Are
 Trained On? Label Provenance in Vision-Transformer Flood Mapping}
 
-\author{Varshini D. N.\thanks{The authors declare that this research was conducted without any specific grant from any funding agency in the public, commercial, or not-for-profit sectors.}\thanks{The authors are with the Department of Artificial Intelligence and Machine Learning, Jyothy Institute of Technology, Pipeline Road, Tatguni, Bengaluru 560082, India (Corresponding author: Varshini D. N.; email: varshinidn13@gmail.com).}\thanks{No part of this work has been previously published or is under concurrent review.},
-Maanya B. S., and Aishwarya S.}
+\author{Varshini D. N.\authorrefmark{1}, Maanya B. S.\authorrefmark{1}, and
+Aishwarya S.\authorrefmark{1}}
 
-\maketitle
+\address[1]{Department of Artificial Intelligence and Machine Learning, Jyothy
+Institute of Technology, Pipeline Road, Tatguni, Bengaluru 560082, India}
+
+%% First-page footnote. IEEE Access reserves this for support information. Two
+%% paragraphs are required here: funding, then prior publication.
+\tfootnote{The authors declare that this research was conducted without any
+specific grant from any funding agency in the public, commercial, or
+not-for-profit sectors.
+\par
+No part of this work has been previously published or is under concurrent
+review.}
+
+\markboth{Varshini \headeretal: Are Flood Risk Classifiers Measuring What They
+Are Trained On?}{Varshini \headeretal: Are Flood Risk Classifiers Measuring
+What They Are Trained On?}
+
+\corresp{Corresponding author: Varshini D. N. (e-mail: varshinidn13@gmail.com).}
 
 \begin{abstract}
 Automated flood mapping from satellite imagery has moved rapidly from manual
@@ -57,29 +122,33 @@ that graded flood-risk output requires terrain-derived risk labels rather than
 synthetic severity tiers.
 \end{abstract}
 
-\begin{IEEEkeywords}
-flood mapping, vision transformers, dataset shortcuts, label provenance,
-remote sensing, explainability, reproducibility.
-\end{IEEEkeywords}
+\begin{keywords}
+dataset shortcuts, explainability, flood mapping, label provenance, remote
+sensing, reproducibility, vision transformers.
+\end{keywords}
+
+\titlepgskip=-21pt
+
+\maketitle
 
 \section{Introduction}
 \label{sec:intro}
 
-Flood extent mapping from overhead imagery supports disaster response,
-insurance assessment, and infrastructure planning. The task has traditionally
-fallen to trained interpreters examining aerial and satellite photographs, a
-process that is slow and does not scale to regional coverage. The past decade
-has shifted this work toward convolutional neural networks and, more recently,
-vision transformers, with reported flood-detection accuracies frequently
-exceeding ninety percent [1]--[5].
+\PARstart{F}{lood} extent mapping from overhead imagery supports disaster
+response, insurance assessment, and infrastructure planning. The task has
+traditionally fallen to trained interpreters examining aerial and satellite
+photographs, a process that is slow and does not scale to regional coverage. The
+past decade has shifted this work toward convolutional neural networks and, more
+recently, vision transformers, with reported flood-detection accuracies
+frequently exceeding ninety percent \cite{b1,b2,b3,b4,b5}.
 
 The transformer argument is specific and appealing. Convolutional kernels
 aggregate features locally, whereas self-attention relates every patch within an
 image, and flood susceptibility is argued to be a function of large-scale
 spatial patterns: river channels, drainage basins, elevation gradients, and
-impervious-surface extent [6]. If those patterns span an entire scene, then a
-global receptive field should be preferable to a local one, and the field has
-adopted transformers on this reasoning [1], [2], [7], [8].
+impervious-surface extent \cite{b6}. If those patterns span an entire scene, then
+a global receptive field should be preferable to a local one, and the field has
+adopted transformers on this reasoning \cite{b1,b2,b7,b8}.
 
 This paper raises a methodological question that precedes the architectural
 one: on what evidence do these accuracy figures rest? Accuracy is a statement
@@ -92,33 +161,33 @@ than the phenomenon.
 \subsection{Flood Detection From Optical Imagery}
 
 Flood detection datasets fall into two broad families. Post-event collections
-such as FloodNet [9], assembled from unmanned aerial vehicle survey following
-Hurricane Harvey, provide pixel or image-level inundation labels at high spatial
-resolution. Multi-temporal archives provide broader coverage and the temporal
-repetition required for change detection, typically pairing Sentinel-1
+such as FloodNet \cite{b9}, assembled from unmanned aerial vehicle survey
+following Hurricane Harvey, provide pixel or image-level inundation labels at
+high spatial resolution. Multi-temporal archives provide broader coverage and the
+temporal repetition required for change detection, typically pairing Sentinel-1
 synthetic aperture radar with Sentinel-2 optical imagery so that flood extent
-can be separated from permanent water [10].
+can be separated from permanent water \cite{b10}.
 
 Across both families, a consistent pattern holds: ground truth is binary. An
 image is flooded or it is not. FloodNet v1.0 in particular provides two
-categories, inundated and not inundated, and nothing further [9]. This is not an
-oversight but a consequence of how the labels were derived, from visual
+categories, inundated and not inundated, and nothing further \cite{b9}. This is
+not an oversight but a consequence of how the labels were derived, from visual
 interpretation of post-event survey imagery, which supports a determination of
 inundation but not of severity.
 
-Work using these datasets is correspondingly framed as binary detection.
-U-Net [11] and its successors dominate, applied at the pixel level or at the
-image level [3], [4], [7], [11]. The framing is methodologically sound: the
+Work using these datasets is correspondingly framed as binary detection. U-Net
+\cite{b11} and its successors dominate, applied at the pixel level or at the
+image level \cite{b3,b4,b7,b11}. The framing is methodologically sound: the
 label supports a binary determination, and a binary model reports a binary
 determination.
 
 \subsection{Vision Transformers for Remote Sensing}
 
-Vision transformers [12] and hierarchical variants such as Swin [13] have been
-adapted extensively to remote sensing, spanning land-cover classification,
-object detection, and change detection. Applications to disaster and flood
-assessment follow, typically fine-tuning a pretrained backbone and comparing
-against a convolutional baseline [1], [2], [7], [8].
+Vision transformers \cite{b12} and hierarchical variants such as Swin
+\cite{b13} have been adapted extensively to remote sensing, spanning land-cover
+classification, object detection, and change detection. Applications to disaster
+and flood assessment follow, typically fine-tuning a pretrained backbone and
+comparing against a convolutional baseline \cite{b1,b2,b7,b8}.
 
 The comparative finding is consistent across studies: transformers are
 competitive with, or modestly superior to, convolutional networks at matched
@@ -128,17 +197,17 @@ variance matters, and yet multi-seed reporting is uncommon.
 
 \subsection{Label Quality and Dataset Shortcuts}
 
-The concern we raise is not specific to remote sensing. Geirhos
-\emph{et al.}~[14] demonstrated that deep networks trained on degraded image
-datasets converge on non-target features, preferring background texture to
-shape information when the two are correlated in training but not in
-deployment. Northcutt \emph{et al.}~[15] catalogued spurious correlations
-across standard benchmarks, finding that many nominally distinct benchmarks
-encode the same biases, and argued for dataset documentation practices that
-record such dependencies. Bender and Friedman [16] argued for explicit data
-statements alongside published datasets, recording intended use, collection
-process, and known biases, so that a dataset's decision content is legible to a
-reader rather than implicit in its directory structure.
+The concern we raise is not specific to remote sensing. Geirhos \emph{et al.}
+\cite{b14} demonstrated that deep networks trained on degraded image datasets
+converge on non-target features, preferring background texture to shape
+information when the two are correlated in training but not in deployment.
+Northcutt \emph{et al.} \cite{b15} catalogued spurious correlations across
+standard benchmarks, finding that many nominally distinct benchmarks encode the
+same biases, and argued for dataset documentation practices that record such
+dependencies. Bender and Friedman \cite{b16} argued for explicit data statements
+alongside published datasets, recording intended use, collection process, and
+known biases, so that a dataset's decision content is legible to a reader rather
+than implicit in its directory structure.
 
 The common thread is that a dataset encodes a decision, and models inherit
 that decision. When a label set is assembled by a procedure rather than by
@@ -147,9 +216,9 @@ reported metric measures.
 
 \subsection{Explainability in Remote Sensing}
 
-Gradient-based class activation mapping [17] and attention rollout [18] are
-widely applied to flood mapping, generally producing qualitative figures
-showing that the model attends to water or terrain. Such figures are
+Gradient-based class activation mapping \cite{b17} and attention rollout
+\cite{b18} are widely applied to flood mapping, generally producing qualitative
+figures showing that the model attends to water or terrain. Such figures are
 persuasive and unverified. Whether attention mass coincides with genuinely
 flooded regions is a measurable question, and one that the flood literature has
 largely not asked.
@@ -171,29 +240,28 @@ and we explain why it cannot yet be reported on the data available to us.
 \label{sec:method}
 
 \subsection{The Re-Split Mechanism}
+\label{sec:resplit}
 
 Consider a dataset providing $n$ positively-labelled images, all sharing the
 single ground-truth class \emph{Flooded}. A pipeline requiring five severity
 tiers might satisfy the requirement by shuffling the $n$ images and
-partitioning them, as in Listing~1.
+partitioning them, as in Table~\ref{tab:resplit}.
 
-\begin{lstlisting}[
-  language=Python,
-  basicstyle=\ttfamily\footnotesize,
-  numbers=left,
-  numberstyle=\scriptsize,
-  numbersep=6pt,
-  frame=tb,
-  aboveskip=10pt,
-  belowskip=10pt,
-  columns=fullflexible,
-  caption={Partition of one class into three synthetic tiers.},
-  label={lst:resplit}]
-shuffle(flooded_images)
-medium_risk = flooded_images[0     : n/3]
-high_risk   = flooded_images[n/3   : 2n/3]
-flooded     = flooded_images[2n/3  : n]
-\end{lstlisting}
+\begin{table}[!t]
+\caption{Partition of one class into three synthetic tiers.}
+\label{tab:resplit}
+\centering
+\begin{tabular}{@{}r@{\,}l@{}}
+\hline
+\\[-6pt]
+\rule{0pt}{11pt}1 & \texttt{shuffle(flooded\_images)}\\
+\rule{0pt}{11pt}2 & \texttt{medium\_risk = flooded\_images[0:n/3]}\\
+\rule{0pt}{11pt}3 & \texttt{high\_risk\ \ \ = flooded\_images[n/3:2n/3]}\\
+\rule{0pt}{11pt}4 & \texttt{flooded\ \ \ \ \ = flooded\_images[2n/3:n]}\\
+\\[-6pt]
+\hline
+\end{tabular}
+\end{table}
 
 An analogous partition is applied to the negative class, dividing it into
 \emph{Non-Flooded} and \emph{Low Risk}. Each image receives exactly one label,
@@ -221,7 +289,7 @@ The pipeline examined here organises downloaded imagery into class directories
 keyed by the configured class names, then trains and evaluates a classifier
 over those directories. The organisation step performed the partition described
 above. Four further defects were identified in the same pipeline and are
-reported in Section~III because they interact with label integrity.
+reported in Section~\ref{sec:results} because they interact with label integrity.
 
 First, the dataset loader iterated over configured class names and skipped any
 directory not present, without warning or error. Given a binary directory
@@ -249,13 +317,13 @@ same means and would pass any check confined to labels.
 
 Experiments use five classes with train, validation, and test proportions of
 0.70, 0.15, and 0.15. Input resolution is $224\times224$ pixels. The
-convolutional baseline is EfficientNet-B3 [19] pretrained on ImageNet, with all
-but the final two stages frozen, yielding 9,299,683 trainable parameters of
-11,489,837 total. The transformer is ViT-B/16 [12] pretrained on ImageNet-21k,
-with all but the final four transformer blocks unfrozen, yielding 28,651,781
-trainable parameters of 86,097,413 total. Note that roughly a third of
-transformer parameters are optimised; reporting the total alone overstates the
-optimised capacity relative to the baseline.
+convolutional baseline is EfficientNet-B3 \cite{b19} pretrained on ImageNet,
+with all but the final two stages frozen, yielding 9,299,683 trainable
+parameters of 11,489,837 total. The transformer is ViT-B/16 \cite{b12}
+pretrained on ImageNet-21k, with all but the final four transformer blocks
+unfrozen, yielding 28,651,781 trainable parameters of 86,097,413 total. Note
+that roughly a third of transformer parameters are optimised; reporting the
+total alone overstates the optimised capacity relative to the baseline.
 
 Both arms share identical splits, identical augmentation, and identical
 optimisation: AdamW at a learning rate of $1\times10^{-4}$ with weight decay
@@ -267,15 +335,15 @@ execution it was not the only variable that varied: training ran on CPU-only
 hardware, and the transformer arm was curtailed at six epochs against the
 baseline's eight. We report this explicitly because it confounds the
 cross-architecture comparison, and we address the consequence in
-Section~III-B.
+Section~\ref{sec:results-perf}.
 
 Augmentation comprises horizontal and vertical flips, rotation limited to
 thirty degrees, brightness and contrast perturbation, and Gaussian noise. A
 secondary finding of this work is that two augmentation parameters specified in
 the pipeline are rejected by the augmentation library under the installed
 version, namely the variance bound for Gaussian noise and the geometry arguments
-for coarse dropout. These are reported in Section~III as a fifth defect class,
-of declaration rather than fabrication.
+for coarse dropout. These are reported in Section~\ref{sec:results} as a fifth
+defect class, of declaration rather than fabrication.
 
 Evaluation reports accuracy, macro-averaged and weighted-averaged F1,
 macro-averaged area under the precision-recall curve, per-class precision,
@@ -287,19 +355,20 @@ rewards majority-class collapse.
 
 The audit suite comprises thirty-four executable checks across two files.
 Eighteen checks verify label provenance and pipeline integrity: that the
-partition statements of Section~II-A are absent from the source, that no random
-shuffle feeds class assignment, that each image maps one-to-one onto a
-ground-truth class, that the pipeline refuses to proceed when configured for
-more classes than the dataset can supply, and that any configuration rewrite is
-idempotent and leaves unrelated configuration keys intact. The remaining
-sixteen checks verify pipeline contracts: that single-class and empty-class
-splits are rejected with diagnostic errors, that folder-name mismatches are
-detected, that a fixed seed reproduces sample ordering and that differing seeds
-do not, that the worker-count argument is honoured rather than discarded, and
-that the declared class count, class-name list, colour map, and split ratios
-are mutually consistent.
+partition statements of Section~\ref{sec:resplit} are absent from the source,
+that no random shuffle feeds class assignment, that each image maps one-to-one
+onto a ground-truth class, that the pipeline refuses to proceed when configured
+for more classes than the dataset can supply, and that any configuration
+rewrite is idempotent and leaves unrelated configuration keys intact. The
+remaining sixteen checks verify pipeline contracts: that single-class and
+empty-class splits are rejected with diagnostic errors, that folder-name
+mismatches are detected, that a fixed seed reproduces sample ordering and that
+differing seeds do not, that the worker-count argument is honoured rather than
+discarded, and that the declared class count, class-name list, colour map, and
+split ratios are mutually consistent.
 
 \subsection{Attention Localisation Metric}
+\label{sec:pointinggame}
 
 To test whether model attention corresponds to flood regions, we define a
 pointing-game formulation. For each image, the attention map is normalised to
@@ -314,25 +383,25 @@ therefore independent.
 The score requires a per-pixel inundation mask, which is the ground-truth form
 this work does not have. Both available label sets are image-level, and the
 procedurally generated imagery used for the reported measurements carries no
-segmentation annotation at all. Section~III-D records this as the measurement
-we could not make. We specify the metric here so that the gap is precise rather
-than general: the definition is complete, the implementation is written, and the
-missing element is a labelled pixel mask, which a segmented real dataset such
-as FloodNet would supply.
+segmentation annotation at all. Section~\ref{sec:results-attn} records this as
+the measurement we could not make. We specify the metric here so that the gap
+is precise rather than general: the definition is complete, the implementation
+is written, and the missing element is a labelled pixel mask, which a segmented
+real dataset such as FloodNet would supply.
 
 \section{Results}
 \label{sec:results}
 
 \subsection{Audit Findings}
 
-All thirty-four checks pass on the corrected pipeline. Table~I summarises the
-defect classes identified and the detection mechanism for each.
+All thirty-four checks pass on the corrected pipeline. Table~\ref{tab:defects}
+summarises the defect classes identified and the detection mechanism for each.
 
-\begin{table*}[!t]
+\begin{table}[!t]
 \caption{Defect Classes Identified and Their Detection}
 \label{tab:defects}
 \centering
-\begin{tabular}{@{}p{0.8cm}p{3.1cm}p{6.5cm}p{5.3cm}@{}}
+\begin{tabular}{@{}p{0.6cm}p{2.6cm}p{4.6cm}p{4.0cm}@{}}
 \toprule
 \textbf{\#} & \textbf{Defect} & \textbf{Detection} & \textbf{Severity} \\
 \midrule
@@ -354,7 +423,7 @@ Capture library warning at augmentation construction &
 Moderate: intended augmentation absent \\
 \bottomrule
 \end{tabular}
-\end{table*}
+\end{table}
 
 Defect 1 renders the originally reported five-class metrics uninterpretable.
 Defects 2 through 5 are individually recoverable but jointly sever the
@@ -362,9 +431,10 @@ connection between a stated experimental protocol and the protocol actually
 executed.
 
 \subsection{Baseline Performance Under a Controlled Protocol}
+\label{sec:results-perf}
 
-Table~II reports aggregate metrics for both architectures on the same test
-set, and Table~III the per-class breakdown.
+Table~\ref{tab:aggregate} reports aggregate metrics for both architectures on
+the same test set, and Table~\ref{tab:perclass} the per-class breakdown.
 
 \begin{table}[!t]
 \caption{Aggregate Metrics, Five-Class, Test Set of 150 Images (30 per Class)}
@@ -379,7 +449,7 @@ Accuracy            & 0.8533 & 0.7000 \\
 F1 (macro)          & 0.8498 & 0.6989 \\
 F1 (weighted)       & 0.8498 & 0.6989 \\
 AUC (macro)         & 0.9732 & 0.9592 \\
-Trainable parameters & 9,299,683 (80.9\%) & 28,651,781 (33.3\%) \\
+Trainable parameters & 9,299,683 (80.9 \%) & 28,651,781 (33.3 \%) \\
 Total parameters    & 11,489,837 & 86,097,413 \\
 \bottomrule
 \end{tabular}
@@ -391,7 +461,7 @@ Total parameters    & 11,489,837 & 86,097,413 \\
 \centering
 \begin{tabular}{@{}lcccccc@{}}
 \toprule
-& \multicolumn{3}{c}{\textbf{EfficientNet-B3}} & \multicolumn{3}{c}{\textbf{ViT-B/16}} \\
+ & \multicolumn{3}{c}{\textbf{EfficientNet-B3}} & \multicolumn{3}{c}{\textbf{ViT-B/16}} \\
 \cmidrule(lr){2-4}\cmidrule(lr){5-7}
 \textbf{Class} & \textbf{P} & \textbf{R} & \textbf{F1} & \textbf{P} & \textbf{R} & \textbf{F1} \\
 \midrule
@@ -447,6 +517,7 @@ heterogeneity within the negative class or may reflect insufficient training,
 and the present experiment does not separate the two.
 
 \subsection{Distinguishing Label Artefact From Model Capability}
+\label{sec:distinguish}
 
 The controlled protocol establishes what is common between the two arms and
 therefore permits a restricted inference. Because seeds are fixed and only the
@@ -458,8 +529,8 @@ correspondingly limited: differences between the arms are not attributable to
 seed variation or to data variation, but neither are they attributable to
 architecture alone.
 
-Table~III therefore constrains what may be claimed in two ways, and in both it
-cuts against the intuitive reading of an architecture comparison.
+Table~\ref{tab:perclass} therefore constrains what may be claimed in two ways,
+and in both it cuts against the intuitive reading of an architecture comparison.
 
 First, aggregate accuracy is an inadequate summary for graded flood tasks. The
 0.8533 headline is compatible with per-tier F1 ranging from 0.654 to 0.968 under
@@ -484,27 +555,30 @@ and the present comparison is doubly uninterpretable because its training
 budgets are also unmatched.
 
 \subsection{Attention Localisation}
+\label{sec:results-attn}
 
-No pointing-game result is reported. The metric is defined in Section~II-E,
-but its evaluation requires pixel-level ground-truth flood masks, and the
-imagery available to this work is procedurally generated without segmentation
-annotations. Reporting a value computed against synthetic masks would measure
-agreement with the generator's drawing routine rather than agreement with
-hydrology, so the measurement is withheld rather than approximated. This
-remains the paper's largest unfinished measurement and is the first thing we
-would complete with access to a segmented real dataset.
+No pointing-game result is reported. The metric is defined in
+Section~\ref{sec:pointinggame}, but its evaluation requires pixel-level
+ground-truth flood masks, and the imagery available to this work is
+procedurally generated without segmentation annotations. Reporting a value
+computed against synthetic masks would measure agreement with the generator's
+drawing routine rather than agreement with hydrology, so the measurement is
+withheld rather than approximated. This remains the paper's largest unfinished
+measurement and is the first thing we would complete with access to a
+segmented real dataset.
 
 \section{Discussion}
 \label{sec:discussion}
 
 \subsection{Accuracy Summarises Less Than It Appears To}
 
-The measurements in Section~III-B are most usefully read as a warning about a
-reporting convention rather than as a result about architectures. Per-tier F1
-varies by a factor of three within the convolutional baseline, from 0.654 to
-0.968, while aggregate accuracy reads 0.8533. A reader given only the aggregate
-figure would form an impression of a model that handles a five-class problem
-uniformly well, and would be wrong about two of the five classes.
+The measurements in Section~\ref{sec:results-perf} are most usefully read as a
+warning about a reporting convention rather than as a result about
+architectures. Per-tier F1 varies by a factor of three within the
+convolutional baseline, from 0.654 to 0.968, while aggregate accuracy reads
+0.8533. A reader given only the aggregate figure would form an impression of a
+model that handles a five-class problem uniformly well, and would be wrong
+about two of the five classes.
 
 The convention matters here more than in a typical classification task. Graded
 flood taxonomies are attractive to report precisely because a graded output
@@ -532,15 +606,17 @@ the observed ground truth be derived from an independent physical variable.
 \subsection{Attention Maps Are Not Evidence}
 
 The flood-mapping literature displays attention overlays as evidence that models
-focus on hydrologically relevant regions. Section~II-E introduces a measurement
-of this claim and Section~III-D explains why we withhold it, the absence of
-pixel-level ground truth being a property of the available data rather than of
-the method. The methodological point stands regardless: a qualitative
-visualisation cannot distinguish between attention that localises flooding and
-attention that localises scene texture, and the two are readily confounded in
-overhead imagery where water, sediment, and vegetation loss co-occur.
+focus on hydrologically relevant regions. Section~\ref{sec:pointinggame}
+introduces a measurement of this claim and Section~\ref{sec:results-attn}
+explains why we withhold it, the absence of pixel-level ground truth being a
+property of the available data rather than of the method. The methodological
+point stands regardless: a qualitative visualisation cannot distinguish between
+attention that localises flooding and attention that localises scene texture,
+and the two are readily confounded in overhead imagery where water, sediment,
+and vegetation loss co-occur.
 
 \subsection{What Graded Flood Risk Actually Requires}
+\label{sec:graded}
 
 Genuine severity tiers require variables that ground truth does not contain.
 Plausible derivations include digital elevation models, from which elevation
@@ -559,17 +635,18 @@ they constrain what the paper can be said to demonstrate.
 
 The available imagery is synthetic and procedurally generated. It verifies
 pipeline correctness and label integrity but carries no hydrological content.
-Tables~II and III should therefore be read as a pipeline characterisation, not
-as flood-detection performance, and no number in this paper should be cited as
-evidence about how well either architecture maps flooding.
+Tables~\ref{tab:aggregate} and \ref{tab:perclass} should therefore be read as a
+pipeline characterisation, not as flood-detection performance, and no number in
+this paper should be cited as evidence about how well either architecture maps
+flooding.
 
 The two architecture arms are not training-budget matched. The convolutional
 baseline completed eight epochs and the transformer six, because CPU-only
 execution constrained the run time available. The 0.8533 against 0.7000
-comparison in Section~III-B is consequently confounded and we decline to
-attribute it to architecture. Matched budgets and at least three seeds per arm
-would be required, and this is the first experiment we would run with additional
-compute.
+comparison in Section~\ref{sec:results-perf} is consequently confounded and we
+decline to attribute it to architecture. Matched budgets and at least three
+seeds per arm would be required, and this is the first experiment we would run
+with additional compute.
 
 Beyond these, the evaluation covers a single dataset, and with real imagery
 would cover a single event, limiting generalisation to that event. Attention
@@ -589,20 +666,21 @@ Real imagery is the prerequisite for the rest. Replacing the procedurally
 generated dataset with a segmented real collection such as FloodNet would
 convert every measurement here from a pipeline characterisation into a
 statement about flood mapping, and would simultaneously supply the pixel-level
-masks that the pointing-game metric in Section~II-E requires. Nothing else in
-the list matters until this is done.
+masks that the pointing-game metric in Section~\ref{sec:pointinggame} requires.
+Nothing else in the list matters until this is done.
 
 A controlled architecture comparison then becomes possible: identical epoch
 budgets, at least three seeds per arm, and both architectures trained on the
 corrected pipeline. This would resolve the confounded comparison in
-Section~III-C and determine whether the convolutional baseline's two-group
-per-tier structure is a property of the label set or of the architecture, which
-the present evidence cannot separate.
+Section~\ref{sec:distinguish} and determine whether the convolutional baseline's
+two-group per-tier structure is a property of the label set or of the
+architecture, which the present evidence cannot separate.
 
 Graded labels derived from physical variables would make the taxonomy itself
-meaningful. Section~IV-D describes such derivations; implementing one and
-documenting the derivation would allow the paper's central objection to severity
-tiers to be answered with a positive construction rather than a prohibition.
+meaningful. Section~\ref{sec:graded} describes such derivations; implementing one
+and documenting the derivation would allow the paper's central objection to
+severity tiers to be answered with a positive construction rather than a
+prohibition.
 
 \section{Conclusion}
 
@@ -630,113 +708,124 @@ terrain-derived risk variables rather than synthetic severity tiers. Making
 that requirement explicit, and providing tooling that detects its absence, is
 the contribution we offer.
 
-\begin{thebibliography}{99}
-\small
+\section*{Acknowledgment}
 
-\bibitem{1}
-I.~Chamatidis, D.~Istrati, and N.~D.~Lagaros, ``Vision transformer for flood
-detection using satellite images from Sentinel-1 and Sentinel-2,''
+AI-assisted tools were used in drafting portions of this manuscript. All such
+text was subsequently reviewed and revised by the authors, who take full
+responsibility for the content of this article.
+
+\begin{thebibliography}{00}
+
+\bibitem{b1} I.~Chamatidis, D.~Istrati, and N.~D.~Lagaros, ``Vision transformer
+for flood detection using satellite images from Sentinel-1 and Sentinel-2,''
 \emph{Water}, vol.~16, no.~12, p.~1670, 2024, doi: 10.3390/w16121670.
 
-\bibitem{2}
-N.~Sharma and M.~Saharia, ``DeepSARFlood: Rapid and automated SAR-based flood
-inundation mapping using vision transformer-based deep ensembles with
-uncertainty estimates,'' \emph{Sci. Remote Sens.}, vol.~11, p.~100203, 2025,
-doi: 10.1016/j.srs.2025.100203.
+\bibitem{b2} N.~Sharma and M.~Saharia, ``DeepSARFlood: Rapid and automated
+SAR-based flood inundation mapping using vision transformer-based deep ensembles
+with uncertainty estimates,'' \emph{Sci. Remote Sens.}, vol.~11, p.~100203,
+2025, doi: 10.1016/j.srs.2025.100203.
 
-\bibitem{3}
-A.~Gebrehiwot, L.~Hashemi-Beni, G.~Thompson, P.~Kordjamshidi, and T.~E.~Langan,
-``Deep convolutional neural network for flood extent mapping using unmanned
-aerial vehicles data,'' \emph{Sensors}, vol.~19, no.~7, p.~1486, 2019,
+\bibitem{b3} A.~Gebrehiwot, L.~Hashemi-Beni, G.~Thompson, P.~Kordjamshidi, and
+T.~E.~Langan, ``Deep convolutional neural network for flood extent mapping using
+unmanned aerial vehicles data,'' \emph{Sensors}, vol.~19, no.~7, p.~1486, 2019,
 doi: 10.3390/s19071486.
 
-\bibitem{4}
-B.~Peng, Z.~Meng, Q.~Huang, and C.~Wang, ``Patch similarity convolutional neural
-network for urban flood extent mapping using bi-temporal satellite multispectral
-imagery,'' \emph{Remote Sens.}, vol.~11, no.~21, p.~2492, 2019,
-doi: 10.3390/rs11212492.
+\bibitem{b4} B.~Peng, Z.~Meng, Q.~Huang, and C.~Wang, ``Patch similarity
+convolutional neural network for urban flood extent mapping using bi-temporal
+satellite multispectral imagery,'' \emph{Remote Sens.}, vol.~11, no.~21, p.~2492,
+2019, doi: 10.3390/rs11212492.
 
-\bibitem{5}
-B.~Kalantar, N.~Ueda, V.~Saeidi, S.~Janizadeh, F.~Shabani, K.~Ahmadi, and
-F.~Shabani, ``Deep neural network utilizing remote sensing datasets for flood
-hazard susceptibility mapping in Brisbane, Australia,'' \emph{Remote Sens.},
-vol.~13, no.~13, p.~2638, 2021, doi: 10.3390/rs13132638.
+\bibitem{b5} B.~Kalantar, N.~Ueda, V.~Saeidi, S.~Janizadeh, F.~Shabani,
+K.~Ahmadi, and F.~Shabani, ``Deep neural network utilizing remote sensing
+datasets for flood hazard susceptibility mapping in Brisbane, Australia,''
+\emph{Remote Sens.}, vol.~13, no.~13, p.~2638, 2021, doi: 10.3390/rs13132638.
 
-\bibitem{6}
-X.~Liu and X.~Di, ``Global context parallel attention for anchor-free instance
-segmentation in remote sensing images,'' \emph{IEEE Geosci. Remote Sens. Lett.},
-vol.~19, pp.~1--5, 2022, doi: 10.1109/LGRS.2020.3023124.
+\bibitem{b6} X.~Liu and X.~Di, ``Global context parallel attention for anchor-free
+instance segmentation in remote sensing images,'' \emph{IEEE Geosci. Remote Sens.
+Lett.}, vol.~19, pp.~1--5, 2022, doi: 10.1109/LGRS.2020.3023124.
 
-\bibitem{7}
-Q.~Ge, T.~Zhao, Y.~Lin, S.~Yan, C.~Xu, X.~Du, and X.~Fan, ``FloodNet: A
-multilevel multimodal fusion network with semantic consistency constraint
+\bibitem{b7} Q.~Ge, T.~Zhao, Y.~Lin, S.~Yan, C.~Xu, X.~Du, and X.~Fan, ``FloodNet:
+A multilevel multimodal fusion network with semantic consistency constraint
 strategy for flood segmentation,'' \emph{IEEE Geosci. Remote Sens. Lett.},
 vol.~22, pp.~1--5, 2025, doi: 10.1109/LGRS.2025.3610188.
 
-\bibitem{8}
-N.~Notarangelo, C.~Wirion, and F.~van Winsen, ``STURM-Flood: A curated dataset
-for deep learning-based flood extent mapping leveraging Sentinel-1 and
+\bibitem{b8} N.~Notarangelo, C.~Wirion, and F.~van Winsen, ``STURM-Flood: A curated
+dataset for deep learning-based flood extent mapping leveraging Sentinel-1 and
 Sentinel-2 imagery,'' \emph{Big Earth Data}, vol.~9, pp.~412--438, 2025,
 doi: 10.1080/20964471.2025.2458714.
 
-\bibitem{9}
-M.~Rahnemoonfar, T.~Chowdhury, A.~Sarkar, D.~Varshney, M.~Yari, and R.~R.~Murphy,
-``FloodNet: A high resolution aerial imagery dataset for post flood scene
-understanding,'' \emph{IEEE Access}, vol.~9, pp.~89644--89654, 2021,
+\bibitem{b9} M.~Rahnemoonfar, T.~Chowdhury, A.~Sarkar, D.~Varshney, M.~Yari, and
+R.~R.~Murphy, ``FloodNet: A high resolution aerial imagery dataset for post flood
+scene understanding,'' \emph{IEEE Access}, vol.~9, pp.~89644--89654, 2021,
 doi: 10.1109/ACCESS.2021.3090981.
 
-\bibitem{10}
-M.~Wieland, F.~Fichtner, S.~Martinis, S.~Groth, C.~Krullikowski, S.~Plank, and
-M.~Motagh, ``S1S2-Water: A global dataset for semantic segmentation of water
-bodies from Sentinel-1 and Sentinel-2 satellite images,'' \emph{IEEE J. Sel.
-Top. Appl. Earth Observ. Remote Sens.}, vol.~17, pp.~1084--1099, 2024,
-doi: 10.1109/JSTARS.2023.3333969.
+\bibitem{b10} M.~Wieland, F.~Fichtner, S.~Martinis, S.~Groth, C.~Krullikowski,
+S.~Plank, and M.~Motagh, ``S1S2-Water: A global dataset for semantic segmentation
+of water bodies from Sentinel-1 and Sentinel-2 satellite images,''
+\emph{IEEE J. Sel. Top. Appl. Earth Observ. Remote Sens.}, vol.~17,
+pp.~1084--1099, 2024, doi: 10.1109/JSTARS.2023.3333969.
 
-\bibitem{11}
-O.~Ronneberger, P.~Fischer, and T.~Brox, ``U-Net: Convolutional networks for
-biomedical image segmentation,'' in \emph{Proc. Int. Conf. Comput. Assist.
-Interv.}, 2015, pp.~234--241, doi: 10.1007/978-3-319-24574-4\_28.
+\bibitem{b11} O.~Ronneberger, P.~Fischer, and T.~Brox, ``U-Net: Convolutional
+networks for biomedical image segmentation,'' in \emph{Proc. Int. Conf. Comput.
+Assist. Interv.}, 2015, pp.~234--241, doi: 10.1007/978-3-319-24574-4\_28.
 
-\bibitem{12}
-A.~Dosovitskiy \emph{et al.}, ``An image is worth 16x16 words: Transformers for
-image recognition at scale,'' in \emph{Proc. Int. Conf. Learn. Represent.}, 2020.
+\bibitem{b12} A.~Dosovitskiy \emph{et al.}, ``An image is worth 16x16 words:
+Transformers for image recognition at scale,'' in \emph{Proc. Int. Conf. Learn.
+Represent.}, 2020.
 
-\bibitem{13}
-Z.~Liu \emph{et al.}, ``Swin transformer: Hierarchical vision transformer using
-shifted windows,'' in \emph{Proc. IEEE/CVF Int. Conf. Comput. Vis.}, 2021,
-pp.~10012--10022.
+\bibitem{b13} Z.~Liu \emph{et al.}, ``Swin transformer: Hierarchical vision
+transformer using shifted windows,'' in \emph{Proc. IEEE/CVF Int. Conf. Comput.
+Vis.}, 2021, pp.~10012--10022.
 
-\bibitem{14}
-R.~Geirhos, J.-H.~Jacobsen, C.~Michaelis, R.~Zemel, W.~Brendel, M.~Bethge, and
-F.~A.~Wichmann, ``Shortcut learning in deep neural networks,'' \emph{Nature
-Machine Intelligence}, vol.~2, no.~11, pp.~665--673, 2020,
+\bibitem{b14} R.~Geirhos, J.-H.~Jacobsen, C.~Michaelis, R.~Zemel, W.~Brendel,
+M.~Bethge, and F.~A.~Wichmann, ``Shortcut learning in deep neural networks,''
+\emph{Nature Machine Intelligence}, vol.~2, no.~11, pp.~665--673, 2020,
 doi: 10.1038/s42256-020-00257-z.
 
-\bibitem{15}
-A.~G.~Northcutt, A.~Athalye, and R.~Mueller, ``Pervasive label errors across test
-sets destabilize machine learning benchmarks,'' in \emph{Proc. NeurIPS}, 2021,
-pp.~16323--16344.
+\bibitem{b15} A.~G.~Northcutt, A.~Athalye, and R.~Mueller, ``Pervasive label errors
+across test sets destabilize machine learning benchmarks,'' in \emph{Proc.
+NeurIPS}, 2021, pp.~16323--16344.
 
-\bibitem{16}
-E.~M.~Bender and B.~Friedman, ``Data statements for natural language processing:
-Toward mitigating system bias and enabling better science,'' \emph{Trans. Assoc.
-Comput. Linguistics}, vol.~6, pp.~587--604, 2018, doi: 10.1162/tacl\_a\_00041.
+\bibitem{b16} E.~M.~Bender and B.~Friedman, ``Data statements for natural language
+processing: Toward mitigating system bias and enabling better science,''
+\emph{Trans. Assoc. Comput. Linguistics}, vol.~6, pp.~587--604, 2018,
+doi: 10.1162/tacl\_a\_00041.
 
-\bibitem{17}
-R.~R.~Selvaraju \emph{et al.}, ``Grad-CAM: Visual explanations from deep networks
-via gradient-based localization,'' in \emph{Proc. IEEE Int. Conf. Comput. Vis.},
-2017, pp.~618--626, doi: 10.1109/ICCV.2017.74.
+\bibitem{b17} R.~R.~Selvaraju \emph{et al.}, ``Grad-CAM: Visual explanations from
+deep networks via gradient-based localization,'' in \emph{Proc. IEEE Int. Conf.
+Comput. Vis.}, 2017, pp.~618--626, doi: 10.1109/ICCV.2017.74.
 
-\bibitem{18}
-A.~Abnar and T.~Zuidema, ``Quantifying attention flow in transformers,'' in
-\emph{Proc. Annu. Meeting Assoc. Comput. Linguistics}, 2020, pp.~4190--4197,
-doi: 10.18653/v1/2020.acl-main.385.
+\bibitem{b18} A.~Abnar and T.~Zuidema, ``Quantifying attention flow in
+transformers,'' in \emph{Proc. Annu. Meeting Assoc. Comput. Linguistics}, 2020,
+pp.~4190--4197, doi: 10.18653/v1/2020.acl-main.385.
 
-\bibitem{19}
-M.~Tan and Q.~V.~Leung, ``EfficientNet: Rethinking model scaling for
+\bibitem{b19} M.~Tan and Q.~V.~Leung, ``EfficientNet: Rethinking model scaling for
 convolutional neural networks,'' arXiv preprint arXiv:1905.11946, 2019,
 doi: 10.48550/arXiv.1905.11946.
 
 \end{thebibliography}
+
+%% IEEE Access requires a biography for EVERY author, placed below the
+%% references. \IEEEbiographynophoto is used because no author photographs are on
+%% file; if photographs are available, switch to the IEEEbiography environment as
+%% in the official template.
+%%
+%% >>> ACTION REQUIRED: the three entries below are PLACEHOLDERS. Each must be
+%% >>> replaced with the author's real credentials (degree(s), granting
+%% >>> institution(s), year(s), current role). Do not submit with these in place.
+
+\begin{IEEEbiographynophoto}{Varshini D. N.} BIOGRAPHY REQUIRED -- degree(s),
+granting institution(s), year(s), and current role or position.
+\end{IEEEbiographynophoto}
+
+\begin{IEEEbiographynophoto}{Maanya B. S.} BIOGRAPHY REQUIRED -- degree(s),
+granting institution(s), year(s), and current role or position.
+\end{IEEEbiographynophoto}
+
+\begin{IEEEbiographynophoto}{Aishwarya S.} BIOGRAPHY REQUIRED -- degree(s),
+granting institution(s), year(s), and current role or position.
+\end{IEEEbiographynophoto}
+
+\EOD
 
 \end{document}
