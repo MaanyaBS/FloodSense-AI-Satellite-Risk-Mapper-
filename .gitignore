@@ -49,3 +49,14 @@ Thumbs.db
 # Logs
 *.log
 logs/
+
+# LaTeX / IEEE paper build artifacts (keep the .tex and the built .pdf)
+*.aux
+*.fls
+*.out
+*.toc
+*.synctex.gz
+paper_ieee.log
+pdflatex.out
+pdflatex.err
+texput.log
